@@ -2,7 +2,37 @@
 
 俞宏华 · hyu_intern@cqfunds.com
 
-## 0. 理解与组织
+---
+
+## 0. Executive Summary
+
+**Task**：在已被压到强势 universe 上，研究同一类 event 落在不同趋势相位时边际作用是否改变。13 条 feature，其中 4 条已跑完初步验证。
+
+**核心 thesis**：用 `r_{t:t+k} = β(θ_t) · event_mag_t + ε_t` 把"强势 + event 择时"形式化——β 在早段相为正（event = 确认信号），在后段相趋零或转负（event = 兑现触发器）。Mentor 要看的不是 idea 数量，是机制 + 识别 + 优先级。
+
+**4 条 Empirical Anchors（已初步验证）**
+
+| Anchor | Status | Sample | 主信号 | clustered t | 关键 caveat |
+|---|---|---|---|---|---|
+| **F1 解禁** | ✅ regime × cohort conditional reversal | 2018-2023, 382K events | β_unlock − β_matched = −0.0042 | -2.6 | low_vol regime 失效；信号几乎完全由首发原股东 / 战略配售 cohort 驱动 |
+| **F6 业绩预告** | ✅ §0 thesis 第一实证 instance（预增 cohort 反 PEAD） | 2018-2023, 20K 匹配（双因子 8.6K） | β_forecast_dev = −0.00185 | -2.52 | type=4 预增独自驱动 99% 信号；双因子 sample 不能严格判 non-redundancy |
+| **F10 异动公告** | ✅ Q1 弱势 sentiment amplifier（capacity-aware） | 2018-2019 H1, 4,520 events | Q1 tradable diff_10 = -6.25% | -6.21 | 1.5y 单 regime sample；CninfoAnnouncement cache 只到 2019-06；OOS hold-out blocked |
+| **F11 LLM 工艺** | ✅ infrastructure validated（不作独立 alpha anchor） | 6,600 events × LLM role × CAR | 过热 × 弱势 prior = -10.85% | -4.76 | LLM ≈ keyword detector（无 alpha 增量；与 F10 同源）；R2 实测走 rule-based 而非 LLM reasoning（infrastructure side honest disclosure） |
+
+详见 §2 Empirical Anchors（包含 4 条 thesis 演化、capacity 估算、5 次 pivot 历史等 research process 痕迹）。
+
+**Top 3 next priorities**：
+1. **F3 全 cohort 跑**（兑现型符号翻转）— F6 在预增 cohort 上是 mini-instance，全样本扩展是反共识赌注主载荷
+2. **F4 cache probe**（同花顺概念 PIT 数据是否在 cache）— 决定 F2/F4/F5 链路可行性
+3. **F1 v5 / F10 v5 robustness**（行业去均值、一字板 filter、严匹配）
+
+**主要 caveat**：F10 实际 sample 限制在 2018-2019 H1（cache staleness）；F11 alpha 等同于 F10 keyword 信号；F1 不是 standalone alpha，是 regime × cohort 双条件 reversal。
+
+---
+
+## 1. Feature 目录（13 条 deep-dive）
+
+### 1.0 理解与组织
 
 「强势」已经把 universe 压到高动量资产里，因此这里的问题不再是发现强势股，也不是单独判断某条 event 是利好还是利空，而是判断：同一类 event 落在不同趋势阶段时，边际作用是否会改变。
 
@@ -22,20 +52,20 @@ r_{t:t+k} = β(θ_t) · event_mag_t + ε_t
 
 13 条 feature 按来源类型分三类。6 条机制重构（F1 / F3 / F4 / F5 / F6 / F8）走的是重新看待已知现象；5 条 AI 解锁旧数据（F2 / F7 / F9 / F10 / F11）走的是用 AI 把未被量化的字段抽出来；2 条 AI 解锁新数据（F12 政府采购中标 / F13 AI 中介叙事偏离度）走的是接公司数据库之外的公开非结构化信息流：后者押在"AI 接管信息中介之后认知图景被重塑"这条前沿假设上。其中 F6 / F7 / F8 / F9 这 4 条扎在 A 股强制披露制度上，文献几乎为零。每条 feature 都必须通过两道门槛：相对公司已有因子库有增量，且具备清晰的识别策略，能够把"机制成立"与"统计相关但缺乏解释力"区分开。仅在事件子样本里看到 reversal，并不算合格 feature；如果不能证明它不同于已有 PV 反转信号，就只是给旧因子套了一个事件标签。
 
-## A 股全局约束
+#### A 股全局约束
 
 - T+1 + 封板不可成交：所有择时 feature 一律用**次日竞价可成交价**回测，封板日撮合价不能当作真实 fill。
 - 北向盘中实时披露 2024-08 已取消，目前只剩收盘后总量 + 前十大活跃股 + 季度持仓。任何依赖盘中北向的 feature 都要重设。
 - 同花顺 / 东财的概念成员名单**会被追溯改写且没有版本史**。用到"某只票属于某概念"的 feature 都必须从一手源 PIT 重建 knowledge-time。
 - 公司侧另类注意力数据 2022 年后系统性恶化（百度指数、问财搜索、同花顺用户、朝阳永续情绪、新浪资金流要么断更要么断崖）。依赖盘后另类注意力的 feature 须分时段评估并主动 flag。
 
-## 一、Feature 一览（13 条 deep-dive）
+#### 反共识假设
 
-**反共识假设**（押在 F3）：在「强势 × 后段相」子样本中，事件后漂移对事件幅度的回归系数显著为负，与全样本 PEAD（Post-Earnings Announcement Drift）正系数符号相反。相位（F2）是这个系数变号的闸门。
+**押在 F3**：在「强势 × 后段相」子样本中，事件后漂移对事件幅度的回归系数显著为负，与全样本 PEAD（Post-Earnings Announcement Drift）正系数符号相反。相位（F2）是这个系数变号的闸门。F6 v1 已在预增子样本上提供 mini-instance 实证（clustered t=-2.52, 反 PEAD 方向），F3 全样本扩展是反共识赌注主载荷。
 
 ---
 
-### F1 解禁预期透支度
+### F1 解禁预期透支度  ✅ **validated → §2.1**
 
 **类别**：反转·结构化 | **Source**：机制重构
 
@@ -63,6 +93,8 @@ label  car_post_1_10     float
 1. **单调性**：控制 ratio / 市值 / 换手后，pre_excess_20d 分位单调预测 car_post_1_10（|t| > 2）。
 2. **识别策略**：β_unlock vs β_control 在同行业 / 市值 / 时间窗匹配对照下显著不同（差值 t > 2，方向与"透支度"假设一致），排除"reversal 在解禁日也有效"的平凡解释。
 3. **异质性**：β_unlock 按 holder_type 拆分，F 检验差异 p < 0.05，排除"解禁日 reversal"的退化情形。
+
+> **v4 验证结论（详 §2.1）**：F1 非 standalone alpha，是 **regime × cohort 双条件 reversal**。低波动期完全失效；首发原股东 + 战略配售 cohort 几乎独自驱动信号。完整验证记录见 `validations/F1_unlock/README.md`。
 
 ---
 
@@ -145,6 +177,8 @@ label   car_post_1_10  float
 - 证伪条件：|交互项 t| < 2，或后段相组系数未由正翻负。
 - 全样本回归系数应为**正**（PEAD 基准存在的证据）。若全样本即不显著或为负，则基准不成立，反共识假设失去比较锚点，整条 F3 重新设计。
 
+> **mini-instance 已验证**：F6 v1 在预增 cohort 上提供反 PEAD 方向第一实证 (clustered t=-2.52)，本 thesis 全样本扩展是 next priority。
+
 ---
 
 ### F4 多题材 exposure 集中度
@@ -207,7 +241,7 @@ phase                   categorical  来自 F2
 
 ---
 
-### F6 业绩预告偏离度
+### F6 业绩预告偏离度  ✅ **validated → §2.2**
 
 **类别**：反转·结构化 | **Source**：机制重构 · A 股强制披露制度
 
@@ -232,6 +266,8 @@ analyst_sue              float   (actual − analyst_consensus) / std_consensus
 **第一周输出**：forecast_dev 与 analyst_sue 的相关性 + 各自对 后续 CAR 的预测力；二者作为 F3 event_mag 主通道的预热验证。
 
 **自检**：与分析师口径 SUE 至少有部分非冗余（相关性 < 0.7），证明 forecast_dev 是独立维度，不是 SUE 换皮。
+
+> **v1 + enum 解码后结论（详 §2.2）**：F6 主信号 99% 由 type=4 预增 cohort 驱动；β<0 是**反 PEAD 方向**，本质上是 §0 反共识 thesis 在预增 cohort 的第一实证 instance，不是"独立第二维 surprise"。
 
 ---
 
@@ -323,7 +359,7 @@ strength_pct             float
 
 ---
 
-### F10 事件确认等级变动（双向）
+### F10 事件确认等级变动（双向）  ✅ **validated → §2.3**
 
 **类别**：加速·派生 | **Source**：AI 解锁旧数据
 
@@ -349,9 +385,11 @@ phase                    categorical 来自 F2
 
 **自检**：升级路径 LLM 抽取与 硬信号 在 category == 3 重叠样本上一致性 > 0.9。
 
+> **v4 验证后 thesis 完全重写（详 §2.3）**：5 次 thesis pivot 后定为"异动公告作 **bimodal sentiment amplifier**"。Q1 弱势 cohort tradable diff_10 = -6.25% (t=-6.21) split-half 两期都稳；Q5 强势侧 +3.37% paper diff 完全是涨停一字板贡献，不可交易。原降级源 thesis (category=3 澄清) 子样本 n=3K underpowered，不再作 main test。
+
 ---
 
-### F11 事件因果角色
+### F11 事件因果角色  ✅ **infrastructure → §2.4**
 
 **类别**：状态·派生 | **Source**：AI 解锁旧数据
 
@@ -375,6 +413,8 @@ phase                    categorical 来自 F2
 **第一周输出**：role 6 类在三相（发酵 / 分化 / 退潮）× 强弱（RS 高/中/低）的 后续 CAR 立体表。
 
 **自检**：角色标签 与 后续 CAR 分布的 chi-square 检验 p < 0.01；LLM role 分类与人工抽检（100 条）一致性 ≥ 0.85。
+
+> **R1-R5 + B 完整跑通后的诚实定位（详 §2.4）**：LLM 实测**= keyword detector**（过热 99.4% / 退潮 95% / 证伪 99% 都是 keyword 命中），无 keyword-外 generalization 能力（"验证"子集 generalization 实测**符号反向**）。F11 的 substantive alpha 与 F10 同源（不是独立增量）。**F11 真正贡献在 infrastructure 层**：corpus pipeline + κ=0.91 与 gold + LLM 70-91% honest ambiguous abstain 在低 info 子集上、R2 实测走 rule-based 的诚实披露。**F11 不作 4th alpha anchor**，作 LLM 工艺 + cross-channel validation。
 
 ---
 
@@ -435,23 +475,162 @@ phase                    categorical 来自 F2
 
 **自检**：deviation_score 与传统 attention factor（百度指数等）相关性 < 0.5，证非冗余；AI 检索召回率随 prompt 微调的稳定性。
 
-## 二、排序与先做哪几个
+---
 
-**排序标准**：机制可信 × 识别清晰度 × PIT 干净度 × 与公司因子库非冗余 × A 股真实可交易性（含容量）× 可证伪样本量。任一维度触雷（可能退化为 PV 复读 / 潜状态泄露 / 封板不可成交 / 与已发表异象冗余 / N 不足）直接降级，不加权救济。
+## 2. Empirical Anchors（已初步验证的四条线）
 
-**识别策略状态自评**：
-- **A 已清晰**：F2 / F3（Top 3 攻坚部分都在这里）
-- **B 需补**：F1（β_unlock vs β_control，已纳入修订 schema）/ F4（须证明独立于市值 / 行业多元化已知因子）/ F5 / F6（与分析师口径 SUE 双重对照）/ F8 / F10 / F12（政府采购：控制行业规模基准，分离业绩惊喜分量）
-- **C 攻坚**：F7（互动易答复 LLM 分类）/ F9（问询函 + 回复匹配 LLM 流程）/ F11（LLM 角色分类 + 叙事一致性合体）/ F13（AI 中介叙事偏离度，前沿）
+跑完 4 条 feature 的初步验证。每一条都附 thesis 演化、关键 result table、capacity 与 caveat。完整记录见 `validations/F*_*/README.md`。
 
-**若只能先做 3 个**：
-1. **F1**：事件零 look-ahead、纯结构化、约一周能出基准。自检拆成三层（含 β_unlock vs β_control 的识别策略），可同时回答"这是 reversal 复读还是 unlock-specific"。
-2. **F2**：F3 / F5 / F11 的前置攻坚。验收口径锁死在「在线 vs 事后偏离与前向收益不相关」，平均准确率不是验收。附带 narrative_implied_phase 做 Cycle Mismatch 检验。
-3. **F3**：event_mag 由 F6 业绩预告偏离度 + F10 事件确认等级升级拼接（不再用 F1 解禁），在 F2 相位之上检验与 PEAD 反号的交互项。反共识赌注押在这一条。
+### 2.0 概览
 
-**附议**：F10 扩成双向（升级 + 降级 / 澄清），把"澄清公告风险"吸收为后段相硬信号，且作为 F3 的第二事件强度通道；F6 / F7 / F8 / F9 是 4 条 A 股强制披露制度撑起来的独有数据源；F4 / F5 借 ICM 的概念成员与龙头-跟风结构落地；F11 把原"事件因果角色"扩成 role + narrative_consistency + novelty + evidence_direction 三轴正交版，吸收了原 F11 叙事一致性；F12（政府采购）/ F13（AI 中介叙事偏离度）是 2 条公司现有缓存之外的 AI 解锁新数据，F13 押在"AI 接管信息中介"的前沿假设上；F11 / F13 等前 3 跑通后再按 PnL 边际贡献排队。
+| Anchor | sample | 主结果 | t (clustered) | thesis pivot | capacity | 关键 caveat |
+|---|---|---|---|---|---|---|
+| **F1 解禁** | 2018-2023, 382K events | β_unlock − β_matched = **−0.0042** | **-2.6** | 0 (orig thesis 直接 conditional 化) | n/a (Universe 级) | low_vol regime 完全失效；首发原股东+战略配售 cohort 驱动 99% 信号 |
+| **F6 业绩预告** | 2018-2023, 20K 匹配 | β_forecast_dev = **−0.00185** | **-2.52** | 1 (PEAD 独立 → §0 mini-instance) | n/a | type=4 预增独自驱动；双因子 sample 8.6K 不能严格判 non-redundancy |
+| **F10 异动** | 2018-2019 H1, 4.5K events | Q1 弱势 tradable diff_10 = **-6.25%** | **-6.21** | **5 (砍 → 反向 → 加速 → bimodal → Q1 robust)** | **~35-73 亿 RMB/年 (Q1)**, ~70-150 (Q1+Q3) | 1.5y 单 regime；OOS hold-out blocked by cache staleness |
+| **F11 LLM 工艺** | 2018-2019 H1, 6.6K events | 过热 × 弱势 prior = **−10.85%** | **-4.76** | 0 (但跑完 reframe 为 infrastructure) | n/a (alpha 同源 F10) | LLM = keyword detector；R2 实测 rule-based 而非 LLM reasoning |
 
-**接下来想展开的 adjacent dimensions**（不在 13 内，可深入）：
+四条线的研究 process 痕迹（pivot / 砍掉的假设 / capacity 发现 / cross-channel validation）是这一节的核心内容，比单纯报 t-stat 更有 evaluation 价值。
+
+---
+
+### 2.1 F1 解禁预期透支度 — regime × cohort conditional reversal
+
+**Thesis 演化**：原 thesis "解禁负漂移 = 集体期权到期"直接经条件化变 "F1 不是 standalone alpha"。
+
+**主结果**（详 `validations/F1_unlock/README.md`）：
+
+| 项 | 结果 |
+|---|---|
+| ALL clean (2018-2023, n=382K) | β_unlock − β_matched = −0.0042 (t≈−2.6) |
+| **regime split (60D vol)** | low_vol diff = **+0.005**（反号）/ mid_vol −0.012 / high_vol −0.008 |
+| **cohort split (holder_type)** | **首发原股东** diff = −0.029 / **战略配售** diff = −0.028 / 股权激励 / 定增 ≈ 0 |
+| freeper interaction β3 | -0.00012 (t=−1.88, marginal) — "供给冲击"叙事弱于"集体期权到期" |
+
+**关键发现**：F1 非 standalone alpha，是 **regime × cohort 双条件 reversal**。在 low_vol 期完全失效；信号 99% 由首发原股东 + 战略配售两个 cohort 驱动。
+
+**与 §0 thesis 关系**：F1 直接实证 β(θ_t) 在 vol regime 间符号都翻转——thesis 的 vol-regime instance。
+
+**Caveats**：matched control 已建（同 year_month × cap_quintile），但未做行业去均值；43.5% multi-event cells dedup 影响未评估。
+
+---
+
+### 2.2 F6 业绩预告偏离度 — §0 反共识 thesis 第一实证 instance
+
+**Thesis 演化**：原 thesis "forecast_dev = PEAD 之外独立第二维 surprise" → enum 解码后**升级**为 "§0 反共识 thesis 在预增 cohort 的第一实证 instance"。Pivot 次数 0（thesis 不是被否决，是被精确化）。
+
+**主结果**（详 `validations/F6_perfforecast/README.md`）：
+
+| 项 | 结果 |
+|---|---|
+| 主表 ALL (n=20,024) | β_forecast_dev = -0.00185, clustered t=**-2.52** |
+| **enum 解码** | type=4 = **预增** (45% events), 在 12.6K 预增子样本上独自 t=-1.99 |
+| 双因子 OLS (n=8,599) | corr(forecast_dev, SUE) = -0.077（几乎正交） |
+| lag bucket | early-post (0-30d) t=-2.18 / mid (30-90d) t=-2.05 / **pre-period (<0d) t=-0.87**（最弱） |
+
+**关键发现**：F6 在预增子样本上 β<0 是**反 PEAD 方向**（PEAD 文献预测预增 → drift+）；本质是 F3「兑现幅度符号翻转项」在预增 cohort 上的 mini-instance。timing premium 在"刚过期末"窗口最强（不是"提前定锚"）。
+
+**与 §0 thesis 关系**：F6 是 β(θ_t) 反共识 thesis 在 cohort 层面的实证 anchor，next step 是 F3 全样本扩展。
+
+**Caveats**：双因子 horse race sample 8.6K 不足以严格判 forecast_dev vs SUE non-redundancy；type=4 enum 是数据驱动解码（forecast_mid 100% 正 + 利润 100% 盈 → "预增"），未查 Gildata 文档；inner join 后 sample 缩到 ~15%。
+
+---
+
+### 2.3 F10 异动公告 anchor 效应 — Q1 sentiment amplifier (5 次 pivot 后)
+
+**Thesis 演化**（5 次 pivot 完整记录）：
+
+| Pivot | thesis | 阶段 | 结果 |
+|---|---|---|---|
+| 1 | 澄清/降级 = 反转硬信号 | sanity | 真澄清 n=3K underpowered，砍 main |
+| 2 | 强势 + 异动 = forced anchor 反转 | v1 (GPT brief) | Q5 强势 t=+0.63 反预测 |
+| 3 | 弱势 + 异动 = 加速下跌 | v1 main | Q1 t=-10.88 但 momentum vs anchor 无 ID |
+| 4 | bimodal anchor (Q1 + Q5 双向) | v2 matched control | Q1 -8.65% / Q5 +3.37% 都 identified |
+| **5** | **Q1 单边 robust + Q3 辅 + Q5 paper-only** | v3 capacity + v4 split-half | Q5 +3.37% 完全是涨停一字板贡献；Q1 真稳 |
+
+**主结果**（详 `validations/F10_anchor_reversal/README.md`）：
+
+| Quintile | n (tradable) | tradable diff_10 | t | 2018 t | 2019 H1 t |
+|---|---|---|---|---|---|
+| **Q1 弱势** | 524 | **−6.25%** | **-6.21** | **-4.92** | **-4.30** |
+| Q2 | 492 | −3.00% | -3.83 | -3.73 | -1.75 (marginal) |
+| **Q3** | 469 | **−3.83%** | **-4.96** | **-3.08** | **-4.16** |
+| Q4 | 436 | -1.89% | -2.47 | -3.44 | **+0.07** (OOS 崩) |
+| Q5 强势 | 409 | **−0.31%** | **-0.35** (paper-only 暴露) | -0.75 | +0.16 |
+
+**Capacity（v4 数字）**：cap 单位是百万元；Q1 median ≈ 42 亿元（中小盘 A 股）。
+- **Q1 年容量**（1% 总市值 × 50% free float 假设）≈ **35-73 亿元 RMB/年**
+- Q1+Q3 robust 双 cohort 年容量 ≈ 70-150 亿元/年
+
+**5-pivot 防御**（写给 mentor）：5 次 pivot 都是 data-driven 升级，不是 outcome chasing——分别对应 sample size 决策 / 数据拒绝预测 / identification 标准升级 / paper-vs-tradable 诚实承认。**承认**：多次 pivot 累积后 in-sample 拟合度上升，严格 OOS 才能最终判定真伪；cache 限制下严格 hold-out 不可行（CninfoAnnouncement / EastmoneyAnnouncementevent / Gildata 公告数据全部 stale 到 ≤ 2020-06），split-half 是 weak proxy。
+
+**与 §0 thesis 关系**：F10 **不是** §0 mini-instance，是**独立的 attention amplifier 通道**——F6 是兑现型反转，F10 是注意力放大已有 sentiment momentum，两通道机制独立但都依赖 prior state × event 交互。
+
+---
+
+### 2.4 F11 事件因果角色 — LLM 工艺基础设施 + cross-channel validation
+
+**Thesis 演化**：原 thesis "LLM role 提供 keyword 之外的 generalization signal" → R5 实测 + B generalization 检验后 reframe 为 "LLM = keyword detector + honest classifier"。F11 **不作 4th alpha anchor**。
+
+**主结果**（详 `validations/F11_eventrole/README.md`）：
+
+| 项 | 结果 |
+|---|---|
+| R3 reliability vs gold (n=200) | Cohen κ = **0.914**, agreement 94% |
+| R5 主表 过热 × 弱势 prior | CAR_10 = **-10.85%, t=-4.76** (paper) / **-4.84% t=-5.60** (tradable) |
+| **B generalization test** | 过热 99.4% / 退潮 95% / 证伪 99% 都是 keyword 命中；**LLM = keyword detector**, 无 incremental signal beyond F10 |
+| **honest ambiguous** | ongoing_st (风险提示) 70% LLM 标 ambiguous；clarification (澄清) 37% ambiguous；random sample 91% ambiguous |
+| R4 faithfulness | A/B/C framing 100% 一致 — implementation-level (R2 走 rule-based), 不是 LLM-level stochastic faithfulness |
+
+**关键发现**：
+- F11 substantive alpha **与 F10 同源**（过热 × 弱势 prior = -10.85% ≈ F10 Q1 -6.25%），cross-channel validation 通过但不是独立增量
+- **LLM 推断 "验证" role 反向**（generalization 子集 +0.81% vs natural keyword -0.59%, 符号相反） → LLM 不可靠
+- **唯一 marginal 正向 alpha 候选**：验证 + yan_anchor (认定/获批) keyword + high conf + tradable, 282 events, +0.82% t=+1.35
+
+**F11 的真实贡献**：
+1. LLM corpus pipeline 跑通（dump → prompt → classify → backtest → cross-validate 全链路）
+2. **Honest ambiguous abstain**（70-91% 在 low-info 子集主动标 ambiguous，不乱标）
+3. κ=0.914 with gold 高一致性
+4. **R2 实测走 rule-based 而非 LLM reasoning** 的诚实披露（R2 5 秒完成 6,600 events = decision tree strip prefix，不是 LLM 逐条推理）
+5. Cross-channel validation: 跟 F10 keyword 信号 100% 重叠 → F10 finding 不是孤立的
+
+**Caveats**：title-only（cache 无 content）；窗口 2018-2019 H1（与 F10 同 sample 限制）；R2 rule-based 让 R4 faithfulness 测试 trivial 化；澄清子样本只 309 events，原 F10 thesis 仍然 underpowered。
+
+---
+
+## 3. Roadmap
+
+### 3.1 立即可做（1-2 周）
+
+1. **F3 全 cohort 跑** — 反共识赌注主载荷。复用 F6 v1 + F10 v3 框架，event_mag = F6 forecast_dev + F10 trigger_passive 拼接，phase proxy 用 60D RS 分位（待 F2 完整版前）。**优先级最高**。
+2. **F4 cache probe** — 看同花顺 / 东财概念成员 PIT 数据是否在 cache（5 分钟 ls）。决定 F2 / F4 / F5 链路可行性。
+3. **F1 v5 robustness** — 行业去均值 + 一字板 filter，看 v4 主 diff 是否仍 t < -2。
+
+### 3.2 中期（1-2 月）
+
+- **F10 v5 严严** — PRIOR_TOL ±2pp → ±1pp + 1:3 matching + 行业去均值
+- **F6 双因子样本扩展** — 用 IBESActualRpt + 自算 SUE 替代 IAS.DefActSUEScore 扩 sample 到 60K+，严格判 forecast_dev vs SUE non-redundancy
+- **F11 v2 LLM 严格分类** — 不走 rule-based, 用真 LLM call（即使更贵）做 6,600 events, 看 R4 faithfulness 是否仍 trivial
+- **F2 PIT 题材相位 v1** — 规则驱动轻量版（涨停家数 + 创新高占比 + 成交占比 + 扩散度），HMM 留 v2
+
+### 3.3 等待 infrastructure
+
+- **F7 互动易答复 LLM 分类** — 需 互动易抓取 pipeline + 5 类 LLM 分类
+- **F8 业绩解释权** — 需 cninfo MD&A 段抓取 + F11 narrative 估计器
+- **F9 问询函与回复** — 需 LLM 解析问询点-回复对
+- **F12 政府采购** — 需 CGPI + 招投标平台爬虫 + entity matching
+- **F13 AI 中介叙事** — 需 AI 检索 API 调用集成 + 偏离度估计器
+
+### 3.4 数据 freshness blocker
+
+F10 严格 OOS hold-out 卡在 cache staleness：
+- CninfoAnnouncement ≤ 2019-06
+- EastmoneyAnnouncementevent ≤ 2020-06
+- Gildata 公告数据是财报章节 index 非事件流
+- 待公司 cache pipeline refresh（建议跟数据团队沟通）后才能在 2023-2024 fresh data 上 OOS 验证 F10 v4 finding
+
+### 3.5 可探索的 adjacent dimensions（不在 13 内）
+
 - **机构调研聚集度**：A 股强制披露投资者关系活动记录，调研机构数量在窗口内激增是事件预兆。与 F7 同源 IR 信号，但 F7 是答复内容，此处是流量 / 聚集结构的 quantitative twin。
 - **大宗交易折溢价 × 事件窗口**：A 股大宗交易制度披露买卖双方席位与折溢价，与匿名集合竞价不同的 informed signal 通道。与 F1 同源供给视角，但是 non-anonymous 持仓变动。
 - **海关 HS code 映射 × 上游公司**：中国海关月度进出口公开数据 + LLM 做 HS code → 公司产品映射，反推中国供给紧张程度。与 F12 政府采购同走"AI 解锁新数据"路线的另一条候选。
