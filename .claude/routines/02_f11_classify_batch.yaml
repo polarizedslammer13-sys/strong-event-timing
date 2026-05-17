@@ -1,0 +1,73 @@
+name: f11_classify_batch
+version: v0
+trigger: manual (after gold_reviewed.jsonl pushed back to repo)
+description: |
+  F11 主分类: 6,600 events 用 frozen prompt + ensemble 3 runs at temp 0.3.
+  Cache by (event_id × run_idx), idempotent rerun.
+
+inputs:
+  corpus_url: https://raw.githubusercontent.com/polarizedslammer13-sys/pysim-workspace/main/tools/f11_dump/output_f11_corpus.jsonl.gz
+  prompt_url: https://raw.githubusercontent.com/polarizedslammer13-sys/strong-event-timing/main/validations/F11_eventrole/prompt_freeze.txt
+  gold_url: https://raw.githubusercontent.com/polarizedslammer13-sys/strong-event-timing/main/validations/F11_eventrole/artifacts/gold_reviewed.jsonl
+
+model: claude-sonnet-4-6
+temperature: 0.3
+
+prompt: |
+  你是 F11 主分类批处理.
+
+  步骤 1: 拉 corpus (6,600 events) + frozen prompt + gold_reviewed.
+
+  步骤 2: 对 6,600 个 events 中 not-in-gold (~6,400 条) 每条:
+    - 用 frozen prompt + temp=0.3, 调 3 次 (run_idx ∈ {1,2,3})
+    - 收集 3 个 role 输出
+    - majority vote:
+        3/3 一致 → stability="high", role_final = 那个 role
+        2/3 一致 → stability="mid",  role_final = 多数 role
+        3 way split → stability="low", role_final = "ambiguous"
+
+  步骤 3: 对 200 gold events: 同样跑 ensemble (用于 R3 reliability 对照).
+
+  步骤 4: 输出 f11_labels.parquet (6,600 rows), schema:
+    event_id (int)
+    code (str)
+    anndate (int)
+    title (str)
+    booster_bucket (str | null)
+    role_run1 / role_run2 / role_run3 (str)
+    role_final (str)
+    stability (str: high/mid/low)
+    confidence_avg (str: high/mid/low → 加权)
+    evidence_quote (str, 取 run1)
+    ambiguous_count (int: 0/1/2/3)
+    is_gold (bool)
+    gold_role (str | null, 仅 is_gold=true 行)
+
+  步骤 5: 单独输出 ensemble_disagreements.jsonl:
+    所有 stability="low" 的 events 完整记录 (3 个 role + evidence_quote 各异).
+    用于 reliability diagnostic 与 prompt iteration.
+
+  步骤 6: 写 prompt_used.txt: 复制本次实际用的 prompt 内容 (reproducibility).
+
+outputs:
+  - path: validations/F11_eventrole/artifacts/f11_labels.parquet
+  - path: validations/F11_eventrole/artifacts/ensemble_disagreements.jsonl
+  - path: validations/F11_eventrole/artifacts/prompt_used.txt
+
+estimated:
+  cost_usd: 40
+  duration_min: 60
+  tokens_in: 6600 × 3 × 1500 = 30M
+  tokens_out: 6600 × 3 × 200 = 4M
+  api_calls: 19800
+
+cache_strategy: |
+  key = (event_id, run_idx, prompt_hash)
+  if cache hit → reuse, don't re-call
+  rerun cost: 仅缺失 cells
+
+failure_modes:
+  - api_rate_limit: exponential backoff, retry 3 times
+  - api_5xx: same
+  - malformed_json: log to malformed.jsonl, exclude from labels, count in meta
+  - stability="low" > 25%: warning, prompt may need v1

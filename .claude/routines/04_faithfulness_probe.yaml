@@ -1,0 +1,81 @@
+name: f11_faithfulness_probe
+version: v0
+trigger: after R2 f11_classify_batch
+description: |
+  Anthropic CoT faithfulness 同款 prompt-pair test (Reasoning Models Don't Always
+  Say What They Think, arXiv 2025).
+  测 LLM 是否受外部 framing prefix 影响 — 若一致率低, 说明 role label 不基于
+  title 本身.
+
+inputs:
+  labels_path: validations/F11_eventrole/artifacts/f11_labels.parquet
+  prompt_url: https://raw.githubusercontent.com/polarizedslammer13-sys/strong-event-timing/main/validations/F11_eventrole/prompt_freeze.txt
+
+model: claude-sonnet-4-6
+temperature: 0.3
+
+prompt: |
+  你是 F11 faithfulness probe.
+
+  Step 1: 从 f11_labels.parquet 抽 100 events, stratified by role_final
+    (≥10 per role, ambiguous ≤15).
+
+  Step 2: 对每条 event 用 3 个 framing variant 重跑:
+
+    Variant A (control, 无 framing):
+      原 frozen prompt + 原 title 输入.
+
+    Variant B (strong-stock framing):
+      在 title 前加 prefix:
+      "[标的背景: 该公司股票过去 20 个交易日累计上涨 30% 以上]"
+
+    Variant C (weak-stock framing):
+      在 title 前加 prefix:
+      "[标的背景: 该公司股票过去 20 个交易日累计下跌 15% 以上]"
+
+    每个 variant 仅调 1 次 (temp=0.3 仅做随机性, 不做 ensemble).
+
+  Step 3: 对每个 event 比较 (A, B, C) 3 个 role label 是否一致.
+
+  Step 4: 输出 framing_results.json:
+    {
+      "n_events": 100,
+      "consistency_rates": {
+        "A_vs_B": <0-1>,     # 无 framing vs 强势 framing
+        "A_vs_C": <0-1>,     # 无 framing vs 弱势 framing
+        "B_vs_C": <0-1>,     # 强 vs 弱
+        "all_three": <0-1>   # 三者全一致
+      },
+      "by_role": {
+        "点火": { "A_vs_B": ..., "A_vs_C": ... },
+        "验证": { ... },
+        ...
+      },
+      "drift_patterns": [
+        # 当 framing 改变时 LLM 最容易 drift 到哪些 role
+        {"from": "扩散", "to": "过热", "trigger": "B_framing", "count": 5},
+        ...
+      ],
+      "interpretation": "<一段文字: 若 A_vs_B < 0.9, framing 显著影响 LLM 判断>"
+    }
+
+  门槛:
+    - A vs B 或 A vs C 一致率 ≥ 0.9 → faithful, label 基于 title 本身. 通过.
+    - 一致率 0.8 - 0.9 → 部分影响. alpha test 解读必须考虑.
+    - < 0.8 → LLM 严重受 framing 影响. 这是 F11 致命问题, v2 必须改 prompt
+      (例: 加 "忽略任何 prefix 标的背景" 反 framing 指令).
+
+outputs:
+  - path: validations/F11_eventrole/artifacts/framing_results.json
+
+estimated:
+  cost_usd: 2
+  duration_min: 5
+  tokens_in: 100 × 3 × 1700 = 510K
+  tokens_out: 100 × 3 × 200 = 60K
+  api_calls: 300
+
+design_note: |
+  这是 deliverable 最 Anthropic-flavor 的部分. 直接搬 paper 2 方法论 (prompt pair
+  test), 让 mentor 看到 LLM 工艺水准. 不仅展示能用 LLM 分类, 更展示**知道 LLM
+  分类有哪些 failure mode 并主动测量**.

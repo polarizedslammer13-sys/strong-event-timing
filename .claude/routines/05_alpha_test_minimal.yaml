@@ -1,0 +1,90 @@
+name: f11_alpha_test_minimal
+version: v0
+trigger: after R3 reliability_diag (gate: error_structure check)
+description: |
+  生成 Python script 给用户在 bjintern12 跑, 测 role label 对 forward CAR 的预测力.
+  Routine 本身不接 returns 数据, 只生成 script. 用户执行后 push 结果回 repo.
+
+inputs:
+  labels_path: validations/F11_eventrole/artifacts/f11_labels.parquet
+  reliability_path: validations/F11_eventrole/artifacts/reliability_tables/error_structure.csv
+
+model: claude-sonnet-4-6
+temperature: 0.0
+
+prompt: |
+  你是 F11 alpha test script 生成器.
+
+  Step 1: 检查 reliability_tables/error_structure.csv:
+    - 若 booster_bucket 维度检出 non-classical error → script 必须 stratify by
+      booster_bucket
+    - 若 anndate_year 维度检出 → script 加 year fixed effect 或 2018/2019 分跑
+    - 若 Cohen's κ < 0.4 → script 顶部加 warning comment
+
+  Step 2: 生成 alpha_test_f11.py (沿 F1 / F6 风格):
+
+    ```python
+    """
+    F11 v1 alpha test — role label × CAR predictability
+    用户在 bjintern12 跑, 输入 f11_labels.parquet, 输出 alpha_tables/*.csv.
+    """
+    import framework.Universe as uv
+    from framework.Alpha import AlphaBase
+    from framework.Niodata import *
+    import pandas as pd
+    import numpy as np
+
+    # 沿 F1 / F6 pattern: 加载 returns + WindIndustry.wind2, cumsum 跨日,
+    # join f11_labels by (code, anndate), 计算 CAR_{1,5,10},
+    # clustered SE on (year_quarter × wind2)
+
+    # Table 1 主表: role 7 类 × CAR_{1,5,10}
+    # Table 2 二级表: role × strength tercile (prior 20D return) × CAR_10
+    # Table 3 cross-validation: 在 booster_bucket="yc" (异动) 子集上,
+    #   F11 role 分布期望偏向 {过热, 退潮}; 若 >70% 落这两类 → 跨 feature 验证通过
+
+    # ... 完整脚本
+    ```
+
+    完整脚本必须包含:
+    - 加载 returns / WindIndustry.wind2 (沿 F1 用法)
+    - 加载 f11_labels.parquet (path 用户填)
+    - market-excess cumsum
+    - per-event CAR_{1, 5, 10} 计算 (T+1 起跳)
+    - Table 1: role × CAR mean, clustered t (year_quarter × wind2 cluster)
+    - Table 2: role × strength tercile × CAR_10
+    - Table 3: F10 trigger_passive cross-validation
+      (需要用户 join 一个 F10 trigger_passive 标记列, 或在 script 内重抓 category=3
+       + title contains "异常波动" 自己标)
+    - 完整 logging (沿 F1 fprint pattern)
+    - Output CSVs to alpha_tables/
+
+  Step 3: 生成 run_instructions.md:
+    - 部署路径建议: bjintern12 ~/pysim/alphas/f11/
+    - config.xml 模板 (沿 F1 config_f1.xml)
+    - 一行运行命令
+    - Output 拷贝回 repo 命令
+
+  Step 4: 注意事项:
+    - 不要在 routine 内试图直接跑 alpha (无 bjintern12 access)
+    - 生成的 script 用户能直接 copy-paste 到 bjintern12 跑
+    - script 中所有路径用 cfg.getAttributeDefault 配置化, 不 hardcode
+
+outputs:
+  - path: validations/F11_eventrole/scripts/alpha_test_f11.py
+  - path: validations/F11_eventrole/scripts/config_f11.xml
+  - path: validations/F11_eventrole/scripts/run_instructions.md
+
+estimated:
+  cost_usd: 0.1
+  duration_min: 2
+  tokens_in: 20K
+  tokens_out: 8K (主要是 Python 代码)
+
+post_action: |
+  用户在 bjintern12 执行:
+    1. cp scripts/alpha_test_f11.py ~/pysim/alphas/f11/AlphaF11.py
+    2. cp scripts/config_f11.xml ~/pysim/alphas/f11/
+    3. 上传 f11_labels.parquet 到 bjintern12 同目录
+    4. cd ~/pysim && ./superRun.py alphas/f11/config_f11.xml
+    5. 拷贝 output 回 repo: validations/F11_eventrole/artifacts/alpha_tables/

@@ -1,0 +1,66 @@
+name: f11_gold_set_construct
+version: v0
+trigger: manual
+description: |
+  从 F11 corpus 抽 200 stratified events, LLM pre-label, 输出 gold candidate +
+  human review queue.
+
+inputs:
+  corpus_url: https://raw.githubusercontent.com/polarizedslammer13-sys/pysim-workspace/main/tools/f11_dump/output_f11_corpus.jsonl.gz
+  prompt_url: https://raw.githubusercontent.com/polarizedslammer13-sys/strong-event-timing/main/validations/F11_eventrole/prompt_freeze.txt
+
+model: claude-sonnet-4-6
+temperature: 0.0
+
+prompt: |
+  你是 F11 gold set 构造助手.
+
+  步骤 1: 从 corpus_url 拉取 corpus (6,600 events).
+
+  步骤 2: Stratified sampling 200 events:
+    - booster_bucket="yc" (异动): 40, random sample from pool (cap 500)
+    - booster_bucket="wei" (风险/*ST): 40
+    - booster_bucket="qing" (澄清): 40 (注意 pool 仅 309, 必要时全 take 后剩余从 random 补)
+    - booster_bucket="ren" (认定/获批): 40
+    - booster_bucket=null (random): 40 (从 5000 random 池抽)
+
+    若任何 booster pool < 40, 缺口从 random 池补足, 在 metadata 记录.
+
+  步骤 3: 对每条用 prompt_url 的 prompt + temp=0 给 LLM pre-label.
+    输出每条:
+      {event_id, code, anndate, title, booster_bucket,
+       llm_role, llm_confidence, llm_evidence_quote, llm_ambiguous_flag,
+       llm_ambiguity_reason}
+
+  步骤 4: 分桶:
+    - llm_confidence == "high" 且 not ambiguous → gold_candidate
+    - llm_confidence in {"low", "mid"} OR ambiguous → review_queue
+
+  步骤 5: 写两个 jsonl 文件:
+    - gold_candidate.jsonl (高 confidence 部分, 直接采用)
+    - review_queue.jsonl   (低 confidence 部分, 人工 review)
+
+  步骤 6: 同时写 sampling_meta.json:
+    {total: 200, per_bucket: {...}, gold_count: N, review_count: M,
+     missing_buckets: [...]}
+
+outputs:
+  - path: validations/F11_eventrole/artifacts/gold_candidate.jsonl
+  - path: validations/F11_eventrole/artifacts/review_queue.jsonl
+  - path: validations/F11_eventrole/artifacts/sampling_meta.json
+
+estimated:
+  cost_usd: 0.5
+  duration_min: 5
+  tokens_in: 200 × 1500 = 300K
+  tokens_out: 200 × 200 = 40K
+
+post_action: |
+  Output review_queue.jsonl 后, 人工 review 这 ~30-40 条:
+    - 接受 LLM 标签 → 留原 role
+    - 拒绝 → 标 human_role
+    - 不确定 → 标 ambiguous
+  最终合并 (gold_candidate.jsonl + reviewed) → gold_reviewed.jsonl
+  push 回 repo: validations/F11_eventrole/artifacts/gold_reviewed.jsonl
+
+cache_strategy: per event_id, idempotent rerun

@@ -1,0 +1,77 @@
+name: f11_reliability_diag
+version: v0
+trigger: after R2 f11_classify_batch
+description: |
+  Reliability protocol from variance-aware LLM annotation paper (arXiv 2601.02370).
+  核心: 不只看 accuracy, 看 error 是否与 covariate 相关.
+
+inputs:
+  labels_path: validations/F11_eventrole/artifacts/f11_labels.parquet
+  gold_path: validations/F11_eventrole/artifacts/gold_reviewed.jsonl
+
+model: claude-sonnet-4-6
+temperature: 0.0
+
+prompt: |
+  你是 F11 reliability diagnostic.
+
+  Load f11_labels.parquet + gold_reviewed.jsonl (200 gold events with human labels).
+
+  Compute 4 tables:
+
+  Table 1 — Confusion matrix (gold human label × LLM role_final, 7×7 含 ambiguous):
+    行: human label (6 roles + ambiguous)
+    列: LLM role_final (6 roles + ambiguous)
+    cell: count
+    output: reliability_tables/confusion.csv
+
+  Table 2 — Per-class metrics + Cohen's κ:
+    per role: precision, recall, F1, support
+    overall: macro F1, weighted F1, Cohen's κ (with ambiguous as separate class)
+    output: reliability_tables/metrics.csv
+
+  Table 3 — Ensemble stability distribution:
+    breakdown by stability (high/mid/low) × role_final:
+      count, % of total
+    additional: stability vs gold accuracy
+      high stability subset accuracy vs mid/low
+    output: reliability_tables/stability.csv
+
+  Table 4 — Error structure (核心 variance-aware diagnostic):
+    把 LLM 错误标记的 events (LLM ≠ gold) 按 covariate 拆:
+      P(error | booster_bucket): error rate 在 yc/wei/qing/ren/null 5 桶上是否一致
+      P(error | anndate_year): 2018 vs 2019 error rate
+      P(error | title_length_quartile): title 越短/长 error 是否系统性偏高
+    每个交叉用 chi-square test 报 p value.
+
+    判读规则:
+      - 任意 P(error | X) 跨桶差异 > 10pp 且 p < 0.05 →
+        flag "non-classical measurement error in dimension X"
+      - 所有 < 10pp 或 p > 0.05 → "errors approximately classical, downstream alpha
+        bias risk low"
+    output: reliability_tables/error_structure.csv
+
+  最后写 interpretation_notes.md:
+    一段文字总结: κ 数值, macro F1, ambiguous %, stability distribution,
+    是否检出 non-classical error, 后续 R5 alpha test 应注意什么.
+
+outputs:
+  - path: validations/F11_eventrole/artifacts/reliability_tables/confusion.csv
+  - path: validations/F11_eventrole/artifacts/reliability_tables/metrics.csv
+  - path: validations/F11_eventrole/artifacts/reliability_tables/stability.csv
+  - path: validations/F11_eventrole/artifacts/reliability_tables/error_structure.csv
+  - path: validations/F11_eventrole/artifacts/interpretation_notes.md
+
+estimated:
+  cost_usd: 0.2
+  duration_min: 3
+  tokens_in: 50K (mostly data summary)
+  tokens_out: 5K
+
+gate_for_next:
+  - if error_structure 检出 non-classical error in {strength_pct, regime}:
+      warn but don't block. R5 alpha test 必须 stratify by 该 covariate.
+  - if Cohen's κ < 0.4:
+      warn. classifier 弱, alpha test 可信度低.
+  - if ambiguous_rate > 25%:
+      warn. title-only 信息不足, v2 须加 content.
