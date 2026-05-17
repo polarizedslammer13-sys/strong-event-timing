@@ -1,0 +1,293 @@
+# F11 事件因果角色分类 — Frozen Prompt v1
+# Frozen: 2026-05-17
+# Author: F11 R1 gold-set construct pipeline
+# DO NOT MODIFY — changes require a new freeze version.
+
+## 任务描述
+
+对每条 A 股公告事件的 `title` 字段做因果角色分类。
+输出 role ∈ {点火, 验证, 扩散, 证伪, 过热, 退潮, ambiguous}，
+附 confidence ∈ {high, mid, low}、evidence_quote（title 原文片段）、
+ambiguous_flag (bool)、ambiguity_reason (str)。
+
+**分类依据**: 仅 title 文本。不参考 anndate、code、booster_bucket。
+**核心约束**: evidence_quote 必须是 title 的字面截取，不允许改写或意译。
+
+---
+
+## 角色定义
+
+### 1. 点火 (Ignition)
+首次引入新叙事的催化事件。事件的核心是"从无到有"引入新的价值/预期锚点。
+
+操作判据（满足一条即 high 置信）:
+  - 首次签订重大合同、首次中标重要项目
+  - 战略合作协议首次签署
+  - 重大并购/重组首次披露（"拟收购"/"重大资产重组"）
+  - 重大定增/配股启动公告
+  - 重大新产品/新技术/新许可首次获批或发布
+
+关键词锚: 首次, 正式签署, 战略合作协议, 拟收购, 重大资产重组启动,
+          中标…项目, 新产品发布, 许可证获批（首次）
+
+反判规则:
+  - 已有合作框架下的追加/扩展 → 扩散
+  - 续期/重新认定 → 验证
+  - 合同进展（而非首次签署） → 验证
+
+---
+
+### 2. 验证 (Validation)
+对既有叙事的硬证据确认。事件明确说明某个预期/里程碑已成功落地。
+
+操作判据（满足一条即 high 置信）:
+  - 高新技术企业认定/重新认定通过
+  - 药品/医疗器械/资质获批（续期或复认定）
+  - 合同/项目重要进展节点完成公告（进展公告中有明确正向里程碑）
+  - 业绩预增/超预期公告（明确正面）
+  - 重组/并购关键审批通过
+  - 政策补贴/政府奖励获得
+
+关键词锚: 获批, 认定, 通过…认定, 进展顺利, 业绩预增, 超预期,
+          审批通过, 补贴到位, 奖励获得
+
+反判规则:
+  - 如为全新业务方向首次获批 → 点火（更新叙事）
+  - 进展公告但内容模糊（无明确里程碑）→ mid 置信
+
+---
+
+### 3. 扩散 (Diffusion)
+叙事已建立，事件通过规模扩大、新方向延伸、行业共振放大现有预期。
+
+操作判据（满足一条即 high 置信）:
+  - 追加合作/扩展合作/深化战略合作
+  - 新增客户/供应商（非首次，在已有框架下扩展）
+  - 产能扩张/新建二期项目
+  - 行业协同公告（多方参与同一主题的扩散）
+  - 续签/增量合同（在已有合作基础上）
+
+关键词锚: 追加, 扩展合作, 深化合作, 二期, 续签, 新增…合同,
+          产能扩张, 增资扩股（产能方向）
+
+反判规则:
+  - 全新领域/新客户类型首次进入 → 点火
+  - 已知进展里程碑确认 → 验证
+
+---
+
+### 4. 证伪 (Falsification)
+直接否认或严重质疑市场叙事的单次事件。
+
+操作判据（满足一条即 high 置信）:
+  - 澄清公告 + 明确否定内容（"澄清：公司与XXX无关"/"关于XXX不实报道的澄清"）
+  - 对媒体报道进行澄清（通常含否认含义）
+  - 重大合同/项目终止或撤销公告
+  - 重组/并购失败/终止
+  - 业绩预亏/业绩大幅下滑公告（明确负面）
+  - 明确声明"未涉及"/"不属实"/"无重大事项"
+
+关键词锚: 澄清…报道, 否认, 不实, 无关, 终止, 撤销重组,
+          业绩预亏, 业绩下滑, 更正（澄清类）
+
+操作限制（重要）:
+  - 仅"澄清公告"（无副标题，无说明澄清内容） → ambiguous_flag=true, role=ambiguous
+  - "澄清公告的更正公告" → 证伪 (mid)，因为是对已有澄清声明的修正，暗示存在争议
+
+反判规则:
+  - 风险提示（非否认类） → 退潮
+  - *ST 公司发布的与特定叙事无关的公告 → 退潮 或 ambiguous
+
+---
+
+### 5. 过热 (Overheating)
+价格/市场行为层面的异常信号。事件本身不提供新的基本面信息，
+而是对市场过度反应的被动回应。
+
+操作判据（满足一条即 high 置信）:
+  - "股票交易异常波动公告"（任何形式）
+  - 交易所问询函（针对股价涨幅/异动）
+  - 关于股票涨幅/交易量异常的说明或回复
+  - 声明"无法解释涨停/大涨原因"/"与公司基本面无关"
+
+关键词锚: 异常波动, 股票交易异常, 股价异动, 问询函…股价,
+          无法解释涨幅, 关于股票涨幅
+
+反判规则:
+  - 公告中含实质性业务公告（即使异常波动背景下） → 按业务内容分类，过热作为背景
+  - 风险提示公告 + 经营风险（非股价异动） → 退潮
+
+---
+
+### 6. 退潮 (Retreat)
+叙事层面或基本面层面的持续性负向状态，资金系统性撤出题材的信号。
+
+操作判据（满足一条即 high 置信）:
+  - *ST/*PT 公司 + 实质性负向事件（立案调查/行政处罚/重大亏损/退市警告）
+  - 非*ST 公司 + 明确被立案调查/处罚公告
+  - 退市风险提示公告
+  - 重大资产减值/核销公告
+  - 控股股东/实控人被调查/冻结资产
+
+关键词锚: *ST, 立案调查, 行政处罚, 退市风险, 重大资产减值,
+          重大不确定性, 资产冻结, 被调查
+
+操作限制（重要）:
+  - *ST 公司的常规行政公告（监事换届、股东大会、股权变动等）→ ambiguous (mid/low)
+    因为 *ST 标签本身是退潮背景，但单条行政公告不含实质性负向叙事信号。
+  - 风险提示 + 澄清否认 → 证伪（澄清否认优先于退潮）
+
+---
+
+### 7. ambiguous
+**强制使用条件**（满足一条必须输出 ambiguous）:
+  a. title 过短/无实质内容（如"澄清公告"无副标题/进展公告无内容）
+  b. 纯行政事务（监事换届、股东大会通知、关联交易常规披露、募集资金银行理财）
+  c. 补充公告/更正公告（非澄清类，仅格式/数字修正）
+  d. 签发时间/格式公告（无实质内容）
+  e. title 同时符合 ≥2 个 role 且无明确主导关键词
+
+---
+
+## 置信度分级规则
+
+high:
+  - title 关键词与某一 role 完全匹配，语义无歧义
+  - 单条 title 下只有一种合理 role 解读
+
+mid:
+  - 有方向性关键词，但：标题模糊 / 缺少副标题内容 / 或轻度符合多个 role
+  - 分类方向明确但证据不充分
+
+low:
+  - 强行判断，title 信息极少，只能凭借微弱信号猜测
+  - 注意：confidence=low 但 ambiguous_flag=false 的情况应该极少出现
+
+ambiguous_flag=true 的约束:
+  - 当 role=ambiguous 时，ambiguous_flag 必须为 true
+  - 当 confidence=high 时，ambiguous_flag 必须为 false
+  - confidence=low 时若 role≠ambiguous，需在 ambiguity_reason 留说明（仅供审查）
+
+---
+
+## 12 个 Few-Shot 示例
+
+### E01 — 过热 (high)
+title: 中石科技：股票交易异常波动公告
+role: 过热
+confidence: high
+evidence_quote: 股票交易异常波动
+ambiguous_flag: false
+ambiguity_reason: ""
+
+### E02 — 过热 (high)
+title: 农尚环境：股票交易异常波动及风险提示公告
+role: 过热
+confidence: high
+evidence_quote: 股票交易异常波动及风险提示
+ambiguous_flag: false
+ambiguity_reason: ""
+NOTE: 风险提示在异常波动语境下属于对市场过度反应的附带说明，主分类仍为过热。
+
+### E03 — 验证 (high)
+title: 朗姿股份：关于公司获得高新技术企业重新认定的公告
+role: 验证
+confidence: high
+evidence_quote: 获得高新技术企业重新认定
+ambiguous_flag: false
+ambiguity_reason: ""
+
+### E04 — 验证 (high)
+title: 太龙照明：关于通过高新技术企业再次认定的公告
+role: 验证
+confidence: high
+evidence_quote: 通过高新技术企业再次认定
+ambiguous_flag: false
+ambiguity_reason: ""
+
+### E05 — 退潮 (high)
+title: *ST圣莱：立案调查事项进展暨风险提示公告
+role: 退潮
+confidence: high
+evidence_quote: *ST圣莱：立案调查事项进展暨风险提示
+ambiguous_flag: false
+ambiguity_reason: ""
+
+### E06 — 退潮 (mid)
+title: *ST 中绒：关于公司监事会换届选举的公告
+role: ambiguous
+confidence: low
+evidence_quote: 监事会换届选举
+ambiguous_flag: true
+ambiguity_reason: "*ST 公司行政事务公告，无实质性正向/负向叙事信号；*ST 背景提示退潮状态但本条公告本身不含负向事件"
+
+### E07 — 证伪 (ambiguous)
+title: 乐视网：澄清公告
+role: ambiguous
+confidence: low
+evidence_quote: 澄清公告
+ambiguous_flag: true
+ambiguity_reason: "title 仅为'澄清公告'，无副标题说明澄清内容，无法判断是否否认实质性业务叙事"
+
+### E08 — 证伪 (mid)
+title: 华达科技：关于媒体报道的澄清公告
+role: 证伪
+confidence: mid
+evidence_quote: 关于媒体报道的澄清公告
+ambiguous_flag: false
+ambiguity_reason: ""
+NOTE: 澄清媒体报道通常意味着否认，方向为证伪，但具体否认内容不详，故 mid。
+
+### E09 — 证伪 (mid)
+title: 步长制药：澄清公告的更正公告
+role: 证伪
+confidence: mid
+evidence_quote: 澄清公告的更正公告
+ambiguous_flag: false
+ambiguity_reason: ""
+NOTE: 澄清公告的更正暗示原澄清存在争议，仍归证伪范畴，confidence=mid。
+
+### E10 — ambiguous
+title: 东方网力：关于控股股东股票质押式回购交易的公告
+role: ambiguous
+confidence: low
+evidence_quote: 控股股东股票质押式回购交易
+ambiguous_flag: true
+ambiguity_reason: "股权质押为常规财务操作，无明确叙事角色信号"
+
+### E11 — ambiguous
+title: 烽火通信：关于使用闲置募集资金购买银行理财产品到期收回的公告
+role: ambiguous
+confidence: low
+evidence_quote: 使用闲置募集资金购买银行理财产品到期收回
+ambiguous_flag: true
+ambiguity_reason: "常规资金管理操作，与题材叙事无关"
+
+### E12 — ambiguous
+title: 南山铝业：2018年年度关联交易公告
+role: ambiguous
+confidence: low
+evidence_quote: 2018年年度关联交易公告
+ambiguous_flag: true
+ambiguity_reason: "常规年度关联交易披露，无叙事角色信号"
+
+---
+
+## 分类决策树（快速索引）
+
+1. title 含 "异常波动" / "股票交易异常" → 过热 (high)
+2. title 含 "异常波动" + 业务实质公告 → 按业务分类（过热降为背景）
+3. title 以 "*ST"/"*PT" 开头 + 含 "调查"/"处罚"/"亏损"/"退市"/"立案" → 退潮 (high)
+4. title 以 "*ST"/"*PT" 开头 + 中性行政内容（换届/股东大会/股权变动） → ambiguous
+5. title 含 "澄清" + 副标题有明确否认内容 → 证伪 (high/mid)
+6. title 仅"澄清公告"无副标题说明 → ambiguous
+7. title 含 "关于媒体报道的澄清" / "关于不实报道" → 证伪 (mid)
+8. title 含 "获批"/"认定"/"通过…认定"/"业绩预增" → 验证 (high)
+9. title 含 "首次"/"战略合作协议"/"拟收购"/"重大资产重组"（首次） → 点火 (high)
+10. title 含 "追加"/"扩展合作"/"深化"/"二期"/"续签" → 扩散 (high)
+11. 纯行政事务（股东大会/监事换届/关联交易常规披露/理财） → ambiguous
+12. 其他有方向但证据不足 → 按最近似 role, confidence=mid
+
+---
+
+END OF FROZEN PROMPT
