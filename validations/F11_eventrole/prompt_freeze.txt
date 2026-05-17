@@ -1,0 +1,168 @@
+# F11 事件因果角色分类 — Frozen Prompt v1.0
+# 冻结日期: 2026-05-17
+# 用途: 对 A 股公告标题进行事件因果角色分类 (title-only classification)
+# 窗口: 2018-01-01 ~ 2019-06-30
+
+## 任务说明
+
+对每条 A 股公告事件，根据标题（title）判断其在题材/概念的价格弧（price arc）上扮演的因果角色。
+输出 JSON：{role, confidence, evidence_quote, ambiguous_flag, ambiguity_reason}
+
+## 约束
+
+1. 仅依赖 title 文本，不参考 code、anndate、booster_bucket。
+2. evidence_quote 必须是 title 的原文片段，不允许改写。
+3. title 不足（如仅"澄清公告"无副标题）→ 必须 ambiguous_flag=true, role='ambiguous'。
+4. confidence 定义：
+   - high = 关键词明确指向某 role，无歧义
+   - mid  = 有方向倾向但含糊，合理推断
+   - low  = 强行判断，信息极少
+5. 不要因为 booster_bucket 推断 role；booster_bucket 是采样工具，不是标注依据。
+
+## 6 类 Role 操作定义
+
+### 1. 点火 (ignition)
+定义：事件首次引入新的叙事或题材，触发市场关注一个之前未被聚焦的方向。
+典型信号：
+  - 重大战略合作协议（公司进入全新领域）
+  - 重大技术突破或研发里程碑（首次公开）
+  - 公司宣布跨界进军新赛道
+  - 引入新战略方向的高层或重大投资决策
+关键词：战略合作协议, 重大突破, 首次, 进军, 跨界, 战略布局, 研发突破
+
+### 2. 验证 (validation)
+定义：事件以权威证据确认既有叙事，为题材提供实质性背书。
+典型信号：
+  - 监管机构批准（认定/获批/授权/许可）
+  - 重要合同中标（政府/央企/龙头项目）
+  - 权威认证获得（高新技术企业认定、行业认证、质量体系认证）
+  - 里程碑达成（通过验收、产品正式获批上市）
+关键词：认定, 获批, 中标, 通过认定, 获得认证, 荣获, 通过验收, 颁发证书, 授权, 获准
+
+### 3. 扩散 (diffusion)
+定义：题材已进入扩散阶段，事件是跟风者加入趋势的信号，而非首发启动。
+典型信号：
+  - 二线公司发布参与已热点领域的布局公告
+  - 对外合作/投资进入已被市场关注的赛道
+  - 跟随龙头方向的战略合同或参股公告
+关键词：合作协议, 对外投资, 参股, 参与投资, 拟设立子公司, 布局（配合非首发背景）
+
+### 4. 证伪 (falsification)
+定义：事件明确否认或澄清现有正面叙事，是叙事破裂或负向修正的信号。
+典型信号：
+  - 澄清公告（否认媒体传言、市场炒作、未签署协议等）
+  - 明确否认重大合作/中标/技术突破
+  - 说明某利好事项未成立、传闻不实
+判断边界：
+  - 仅含"澄清公告"无副标题 → 必须标为 ambiguous（无法判断澄清对象方向）
+  - "关于媒体报道的澄清公告" → 证伪 mid（澄清媒体传言，方向倾向否定）
+关键词：澄清（含副标题者）, 否认, 未签署, 不存在, 无关联, 未实施
+
+### 5. 过热 (overheating)
+定义：事件信号当前价格走势偏离基本面，市场处于过热状态；通常由交易所强制触发。
+典型信号：
+  - 交易所触发的股票交易异常波动公告（mandatory disclosure）
+  - 交易所问询函回复（关于异常交易/异常波动）
+  - 公司主动发布股价异常波动核查说明或停牌公告
+判断边界：title 中明确含"异常波动"或"交易异常"字样即可确认；置信度 high。
+关键词：异常波动, 交易异常波动, 股票交易异常, 异常交易
+
+### 6. 退潮 (retreat)
+定义：事件是明确的负面信号，标志着题材或公司进入退出/衰退阶段。
+典型信号：
+  - 暂停上市 / 终止上市 / 退市风险警示
+  - 监管处罚（行政处罚决定、立案调查通知）
+  - 债务违约 / 连续亏损 / 破产申请
+  - 风险提示 + 暂停上市/退市语境（非通用格式性风险提示）
+判断边界：
+  - 仅含"风险提示"无暂停上市/退市/立案等具体内容 → 退潮 mid
+  - *ST公司的常规公告（董事会决议、股东大会等）→ 无法从标题判断角色，宜标 ambiguous
+关键词：暂停上市, 终止上市, 退市, 立案调查, 被立案, 行政处罚, 罚款, 连续亏损, 债务违约
+
+### ambiguous（不可分类）
+必须使用情形：
+  - 标题仅含"澄清公告"或"说明公告"无副标题（无法判断澄清对象和方向）
+  - 标题为通用公司治理公告（"第X届董事会第X次会议决议公告"、"更正公告"等）
+  - 关键词模糊，无法区分角色方向
+此时：role='ambiguous', confidence='low', ambiguous_flag=true
+
+---
+
+## 12 个 Few-shot 示例
+
+### 示例 1 — 过热 (high)
+Title: "中石科技：股票交易异常波动公告"
+Output: {"role":"过热","confidence":"high","evidence_quote":"股票交易异常波动","ambiguous_flag":false,"ambiguity_reason":""}
+说明: "异常波动"是交易所触发的过热强信号，无歧义。
+
+### 示例 2 — 过热 (high)
+Title: "华森制药：股票交易异常波动暨股票停牌核查公告"
+Output: {"role":"过热","confidence":"high","evidence_quote":"股票交易异常波动","ambiguous_flag":false,"ambiguity_reason":""}
+说明: 异常波动+停牌核查，双重过热信号，confidence=high。
+
+### 示例 3 — 退潮 (high)
+Title: "*ST圣莱：立案调查事项进展暨风险提示公告"
+Output: {"role":"退潮","confidence":"high","evidence_quote":"立案调查","ambiguous_flag":false,"ambiguity_reason":""}
+说明: 立案调查是监管退潮的硬信号，公司被证监会/司法机关调查。
+
+### 示例 4 — 退潮 (high)
+Title: "*ST运盛：关于公司股票暂停上市的风险提示性公告"
+Output: {"role":"退潮","confidence":"high","evidence_quote":"股票暂停上市","ambiguous_flag":false,"ambiguity_reason":""}
+说明: 暂停上市风险提示是退潮最强信号之一。
+
+### 示例 5 — 验证 (high)
+Title: "朗姿股份：关于公司获得高新技术企业重新认定的公告"
+Output: {"role":"验证","confidence":"high","evidence_quote":"获得高新技术企业重新认定","ambiguous_flag":false,"ambiguity_reason":""}
+说明: 权威机构认定是验证类典型事件，证实技术能力背书。
+
+### 示例 6 — 验证 (high)
+Title: "太龙照明：关于通过高新技术企业再次认定的公告"
+Output: {"role":"验证","confidence":"high","evidence_quote":"通过高新技术企业再次认定","ambiguous_flag":false,"ambiguity_reason":""}
+说明: "通过认定"是验证 role 的核心关键词，confidence=high。
+
+### 示例 7 — ambiguous (low) ← 证伪/ambiguous 边界
+Title: "乐视网：澄清公告"
+Output: {"role":"ambiguous","confidence":"low","evidence_quote":"澄清公告","ambiguous_flag":true,"ambiguity_reason":"仅含澄清公告无副标题，无法判断澄清对象与方向，正负均可"}
+说明: 纯"澄清公告"无任何副标题是典型 ambiguous 案例，必须标 ambiguous。
+
+### 示例 8 — 证伪 (mid)
+Title: "韦尔股份：关于媒体报道的澄清公告"
+Output: {"role":"证伪","confidence":"mid","evidence_quote":"关于媒体报道的澄清公告","ambiguous_flag":false,"ambiguity_reason":""}
+说明: 澄清媒体报道通常是否认正面传言，方向倾向证伪，但无法确认具体内容，confidence=mid。
+
+### 示例 9 — 点火 (mid)
+Title: "XX公司：关于公司与YY公司签署人工智能领域战略合作协议的公告"
+Output: {"role":"点火","confidence":"mid","evidence_quote":"签署人工智能领域战略合作协议","ambiguous_flag":false,"ambiguity_reason":""}
+说明: 战略合作协议进入新赛道有点火信号，但无法确认是否行业首发，confidence=mid。
+
+### 示例 10 — 扩散 (mid)
+Title: "XX公司：关于公司参与区块链技术应用投资的公告"
+Output: {"role":"扩散","confidence":"mid","evidence_quote":"参与区块链技术应用投资","ambiguous_flag":false,"ambiguity_reason":""}
+说明: 非首发公司跟进热点赛道，属于扩散信号，confidence=mid。
+
+### 示例 11 — ambiguous (low) ← 通用公告
+Title: "北大荒：更正公告"
+Output: {"role":"ambiguous","confidence":"low","evidence_quote":"更正公告","ambiguous_flag":true,"ambiguity_reason":"标题为通用公告，无具体事项描述，无法判断事件因果角色"}
+说明: "更正公告"无具体事项，无法分类。
+
+### 示例 12 — ambiguous (low) ← *ST 常规公告
+Title: "*ST嘉陵：重大资产重组进展公告"
+Output: {"role":"ambiguous","confidence":"low","evidence_quote":"重大资产重组进展","ambiguous_flag":true,"ambiguity_reason":"ST公司重组进展方向不明，可能是正向脱困也可能负向失败，无法从标题判断因果角色"}
+说明: *ST公司重组进展不能仅凭标题判断方向，需要具体内容。
+
+---
+## 分类决策树（快速参考）
+
+1. title 含 "异常波动" / "交易异常" → 过热 (high)
+2. title 含 "暂停上市" / "终止上市" / "退市" / "立案调查" / "行政处罚" → 退潮 (high)
+3. title 含 "风险提示"：
+   a. 含 "暂停上市/退市/被暂停" → 退潮 (high)
+   b. 其他 → 退潮 (mid)
+4. title 含 "澄清"：
+   a. 仅"澄清公告"无副标题 → ambiguous (low)
+   b. 含副标题/具体对象 → 证伪 (mid)
+5. title 含 "否认" / "未签署" / "不存在" / "无关联" → 证伪 (high)
+6. title 含 "认定" / "获批" / "中标" / "通过认定" / "荣获" / "授权" → 验证 (high)
+7. title 含 "战略合作协议" / "重大突破" / "首次" / "进军" / "跨界" → 点火 (mid)
+8. title 含 "合作协议" / "对外投资" / "参股" / "参与投资" → 扩散 (mid)
+9. 以上均不满足 → ambiguous (low)

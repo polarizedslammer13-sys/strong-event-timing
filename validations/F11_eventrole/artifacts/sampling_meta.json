@@ -1,0 +1,29 @@
+{
+  "total": 200,
+  "per_bucket": {
+    "guoreh": 40,
+    "tuotie": 40,
+    "wei": 40,
+    "yan": 40,
+    "random": 40
+  },
+  "bucket_name_mapping": {
+    "guoreh": "task_spec:yc — 异动/过热池 (异常波动)",
+    "tuotie": "task_spec:wei — 风险/*ST池 (退潮)",
+    "wei": "task_spec:qing — 澄清池 (证伪)",
+    "yan": "task_spec:ren — 认定/获批池 (验证)",
+    "random": "task_spec:null — 5000 random池"
+  },
+  "gold_count": 86,
+  "review_count": 114,
+  "role_distribution": {
+    "过热": 40,
+    "ambiguous": 85,
+    "退潮": 11,
+    "扩散": 1,
+    "证伪": 23,
+    "验证": 40
+  },
+  "missing_buckets": [],
+  "notes": "Corpus uses different bucket names than task spec (guoreh/tuotie/wei/yan/random); see bucket_name_mapping. Seed=42 used for stratified sampling."
+}
