@@ -64,17 +64,6 @@ label  car_post_1_10     float
 2. **识别策略**：β_unlock vs β_control 在同行业 / 市值 / 时间窗匹配对照下显著不同（差值 t > 2，方向与"透支度"假设一致），排除"reversal 在解禁日也有效"的平凡解释。
 3. **异质性**：β_unlock 按 holder_type 拆分，F 检验差异 p < 0.05，排除"解禁日 reversal"的退化情形。
 
-**v1 验证（2026-05-18, 2018-2023 共 382,301 个干净匹配事件）**：
-
-- **clean ALL**：β_unlock − β_matched = **−0.0042 (t≈−2.6)** (naive SE, 边界过线)
-- **regime split (60D 截面 vol)**：low_vol diff = +0.005（反号）/ mid −0.012 / high −0.008 — F1 在低波动期完全消失
-- **cohort split**：首发原股东限售 diff = −0.029，首发战略配售 diff = −0.028，股权激励/定增 essentially zero — F1 集中在最长锁定期 cohort
-- **freeper interaction**：β3 (pre × freeper) = −0.00012, t = −1.88（marginal）— pre-excess 是 first-order 通道，freeper 仅 second-order
-- **caveats**：所有 t-stat 是 naive OLS（未行业聚类），应作上界读；2022 一年撑起 pooled diff，leave-one-year-out 未做；一字板未剔
-- **结论**：F1 在 vol regime × cohort 双闸门下呈现 conditional reversal；β 状态依赖性与 §0 thesis 同方向（vol 维度首验），严格 phase 维度待 F2 出来后做
-
-详见 [`validations/F1_unlock/README.md`](validations/F1_unlock/README.md).
-
 ---
 
 ### F2 PIT 题材相位
@@ -244,20 +233,6 @@ analyst_sue              float   (actual − analyst_consensus) / std_consensus
 
 **自检**：与分析师口径 SUE 至少有部分非冗余（相关性 < 0.7），证明 forecast_dev 是独立维度，不是 SUE 换皮。
 
-**v1 验证（2026-05-18, 2018-2023 共 20,024 干净匹配事件）**：
-
-- **主表**：β_forecast_dev = −0.00185, **clustered t = −2.52** (year_q × SW2, 462 clusters) — 通过门槛
-- **inflation factor**: t_naive / t_clust = 1.77x（cluster 设置合理）
-- **lag bucket（关键发现）**：sweet spot 是 early-post (0-30d) 披露窗口 t=−2.18 / mid (30-90d) t=−2.05，而非"提前定锚" pre-period (lag<0) t=−0.87
-- **ForcastType cohort**：type=4 = 预增（45% events）几乎独自驱动主信号 t_clust=−1.99
-- **与 SUE 独立**：corr = −0.077（几乎正交，证明非冗余假设）
-- **F3 thesis 第一个实证 instance**：预增公司事后兑现 → 反向漂移，方向与全样本 PEAD 反号，符合 §0 反共识 thesis 预测
-- **caveats**：sample 收缩 1.3%（GPF 1.49M → join 后 20K），selection bias 偏 high-vol/high-growth 公司；双因子 horse race 在 n=8.6K 上 forecast_dev t 衰减 60%，非冗余声称不严格
-
-详见 [`validations/F6_perfforecast/README.md`](validations/F6_perfforecast/README.md).
-
-**叙事修正**：从原"PEAD 独立第二维"重定为"§0 反共识 thesis 在预增 cohort 上的第一个干净实证"。本质是 F3 兑现型符号翻转在单一 cohort 上的 mini 验证。
-
 ---
 
 ### F7 互动易被迫贴概念
@@ -374,28 +349,6 @@ phase                    categorical 来自 F2
 
 **自检**：升级路径 LLM 抽取与 硬信号 在 category == 3 重叠样本上一致性 > 0.9。
 
-**v1 验证（2026-05-18, sanity → v2 重定 thesis → v3 capacity 实证）**：
-
-Pivot 历史 (5 次, 全部 data-driven, 不是 cherry-pick):
-1. 砍 clarification thesis: sanity 阶段发现 category=3 是合并类别, "真澄清" 仅 3.9% (n=3K underpowered)
-2. 强势×异动 reversal: 实测反着, Q5 强势侧无反转
-3. 弱势×异动 加速: v1 主表 t=−2.52, 但无 identification
-4. v2 matched control: bimodal anchor 显著 (Q1 弱 t=−10.4 / Q5 强 t=+3.15)
-5. v3 capacity check: **Q5 +3.37% 完全是涨停一字板 artifact, tradable 后归零**
-
-**v3 final framing — single-side weakness amplifier**:
-- 异动公告 (`category=3 ∩ title contains "异常波动" ∩ NOT "业绩预告"`) n=22K 干净样本
-- **Q1 弱势侧 (prior 20D ≤ -14%) tradable subset**: matched diff_10 = **−6.25% (t=−6.21)**, capacity 衰减 30% 后仍极强
-- Q2-Q4 中性子样本: tradable diff −2~−4% 显著 (剔涨停一字板后才显)
-- Q5 强势侧: tradable diff = −0.31% (t=−0.35), paper +3.37% 全是涨停一字板, 不可交易
-- **Split-half stability**: 2018 Q1 diff = −9.05% / 2019 H1 Q1 diff = −8.65% — 两子期间都极稳
-
-**caveats**：1.5y window (cache 限制), 无 OOS hold-out, 5 次 pivot 累积 in-sample 拟合度上升
-
-详见 [`validations/F10_anchor_reversal/README.md`](validations/F10_anchor_reversal/README.md).
-
-**叙事修正**：从原"证据等级双向变动 (升级/降级)"重定为"异动公告 = forced disclosure 后的 weakness amplifier"。升级方向 (LLM 多源抽取) 因数据获取成本留 v2; 降级 = clarification 因 underpowered 留 v2; v1 实证集中在异动公告这个 hard signal。
-
 ---
 
 ### F11 事件因果角色
@@ -422,41 +375,6 @@ phase                    categorical 来自 F2
 **第一周输出**：role 6 类在三相（发酵 / 分化 / 退潮）× 强弱（RS 高/中/低）的 后续 CAR 立体表。
 
 **自检**：角色标签 与 后续 CAR 分布的 chi-square 检验 p < 0.01；LLM role 分类与人工抽检（100 条）一致性 ≥ 0.85。
-
-**v1 验证（2026-05-18, 6,600 events from 2018-01 to 2019-06）**：
-
-工艺 showcase (这是 F11 deliverable 核心, 接 CDE 项目同套方法论):
-
-- **Frozen prompt v1.0**: 6 类 role 操作定义 + 12 few-shot + 决策树 (9 条规则) + ambiguous gate
-  - 设计依据: variance-aware annotation paper (arXiv 2601.02370) — 强制 ambiguous 而非强分, 避免 non-classical measurement error
-- **Stratified gold set**: 200 events × 5 booster pools (异动/风险/澄清/认定/random), LLM pre-label + 人工 review 17 mid-confidence + 1 override → gold_reviewed.jsonl
-- **Single-pass classification**: Anthropic Routines 远程 batch, 66 chunks × 100 events, checkpoint commit 每 500 events. 实际执行用 decision-tree pattern matching, 5 秒完成 6,600 events
-- **Reliability vs gold (200 matched)**:
-  - **Overall agreement 94.0%**, **Cohen κ = 0.914** (strong)
-  - 过热 P=1.00 R=1.00 / 证伪 P=1.00 R=1.00 / 验证 P=0.87 R=1.00 / ambiguous P=0.99 R=0.89
-  - 12 disagreements 全部是 "LLM 标 role, human review 保守改 ambiguous" — 显示 LLM 没造 false positive
-- **Role 分布 (6,600 events)**:
-  - ambiguous 76.1% (5,020) / 验证 9.3% / 过热 7.6% / 证伪 2.9% / 点火 2.5% / 退潮 1.6% / 扩散 0.1%
-  - 76% ambiguous 比例本身是有价值的发现: title-only 信息不足以分类 3/4 events, 这恰是 variance-aware 框架建议的"诚实 abstain"行为
-
-**关键 finding**: title-only 任务在中文公告强模板化下, 决策树几乎等价于 LLM reasoning (κ=0.91 仅来自 deterministic 规则)。LLM 工艺真正的价值在 76% ambiguous 子样本——这些需要 content 或 LLM 深度 reasoning (v2 工作)
-
-**与 §0 关系**: F11 v1 是分类器, 不直接产 alpha。下游 alpha test (role × strength × CAR) 因 deliverable 时间限制留 v2; 但 role 标签可作为 F1/F6/F10 的 cross-feature covariate
-
-**caveats**:
-- 单 model (Sonnet 4.6), 无 cross-model robustness
-- Time window 2018-2019 在 Claude 训练数据内, LLM 可能 memory bias (faithfulness probe 留 v2)
-- v1 是 rule-based decision tree implementation, 不是真 LLM per-event reasoning. v2 用 LLM reasoning 在 ambiguous 子样本上深耕
-- 澄清公告子类 (否认利好/否认负面/不构成重大影响) v2 加 refutation_subtype
-
-详见 [`validations/F11_eventrole/README.md`](validations/F11_eventrole/README.md).
-
-**Anthropic 派工艺锚定**:
-- Frozen prompt + decision tree = Clio facet extraction methodology
-- Stratified gold + variance-aware override = arXiv 2601.02370 protocol
-- Chunked + checkpointed routine = Anthropic Routines DAG pattern
-- Reliability 重点不是 accuracy 是 error structure = paper 核心论点
-- 与 CDE 项目同源 PIT + hallucination quantification 工艺
 
 ---
 
