@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  F11 v1 alpha test config — bjintern12 / pysim 5.0.0
+  Edit <labels_path> and <output_dir> before running.
+  All other params match alpha_test_f11.py defaults.
+-->
+<Config>
+
+  <!-- ── Input ─────────────────────────────────────────────────────────────── -->
+  <!--
+    Absolute path to f11_labels.parquet on bjintern12.
+    Example: ~/pysim-workspace/tools/f11_dump/f11_labels.parquet
+             /home/bjintern12/strong-event-timing/validations/F11_eventrole/artifacts/f11_labels.parquet
+  -->
+  <labels_path>~/strong-event-timing/validations/F11_eventrole/artifacts/f11_labels.parquet</labels_path>
+
+  <!-- ── Output ────────────────────────────────────────────────────────────── -->
+  <output_dir>~/strong-event-timing/validations/F11_eventrole/artifacts/alpha_tables</output_dir>
+
+  <!-- ── CAR windows ───────────────────────────────────────────────────────── -->
+  <!-- post horizons in trading days (T+1 start implicit) -->
+  <post_days>1,5,10</post_days>
+
+  <!-- prior-return window for "strength" variable (Table 2) -->
+  <pre_days>20</pre_days>
+
+  <!-- ── 一字板 filter ─────────────────────────────────────────────────────── -->
+  <!-- |T+1 return| threshold for declaring a limit-up/down day (not tradable) -->
+  <board_threshold>0.095</board_threshold>
+
+  <!-- ── pysim data fields ──────────────────────────────────────────────────── -->
+  <!-- These are loaded via Niodata(key) inside alpha_test_f11.py -->
+  <pysim_fields>
+    <field key="returns"             desc="daily returns matrix (N_DAYS x NSTOCK)" />
+    <field key="WindIndustry.wind2"  desc="申万二级 industry codes, for cluster SE" />
+  </pysim_fields>
+
+  <!-- ── Cluster SE ────────────────────────────────────────────────────────── -->
+  <!-- Cluster dimension: year_quarter × wind2 (Liang-Zeger G/(G-1) correction) -->
+  <cluster_key>year_quarter_x_wind2</cluster_key>
+
+  <!-- ── Universe info (informational, set by pysim at runtime) ────────────── -->
+  <universe>Ashare</universe>
+  <nstock>6144</nstock>
+  <date_range>20180102-20190628</date_range>
+
+  <!-- ── Meta ──────────────────────────────────────────────────────────────── -->
+  <alpha_id>F11_v1</alpha_id>
+  <author>F11 R5 agent</author>
+  <env>bjintern12 / pysim 5.0.0</env>
+
+</Config>
