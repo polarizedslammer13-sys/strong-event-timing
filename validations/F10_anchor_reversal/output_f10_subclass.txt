@@ -1,0 +1,33 @@
+==== F10 subclass 分布 sanity ====
+   N_DAYS=3533, NSTOCK=6144
+
+   CA total events: 2,481,619
+   category=3 events: 79,266
+
+==== 子类 n 分布 (priority order) ====
+   earnings_overlap        n =  25,474  ( 32.1%)
+   trigger_passive         n =  22,396  ( 28.3%)
+   clarification_true      n =   3,075  (  3.9%)
+   ongoing_st              n =   4,204  (  5.3%)
+   other                   n =  24,117  ( 30.4%)
+
+   category=3 events with same-(di,ii) GPF: 19,574 / 79,266 (24.7%)
+   各子类的 GPF 同 cell 重叠:
+      earnings_overlap        15,789 / 25,474  ( 62.0%)
+      trigger_passive            427 / 22,396  (  1.9%)
+      clarification_true          53 /  3,075  (  1.7%)
+      ongoing_st                 182 /  4,204  (  4.3%)
+      other                    3,123 / 24,117  ( 12.9%)
+
+   prior 20D return per 子类 (median, pct25, pct75):
+   earnings_overlap        median = +0.0059  [pct25=-0.0642, pct75=+0.0963], n=25,408
+   trigger_passive         median = +0.2573  [pct25=+0.0000, pct75=+0.4654], n=22,245
+   clarification_true      median = +0.0369  [pct25=-0.0479, pct75=+0.1470], n=3,036
+   ongoing_st              median = +0.0000  [pct25=-0.0362, pct75=+0.0882], n=4,193
+   other                   median = +0.0244  [pct25=-0.0491, pct75=+0.1126], n=24,045
+
+==== Case 判定 (GPT framework) ====
+  ⚠ case B: clarification_true = 3,075 < 10K → underpowered
+  earnings_overlap = 32.1% (低于 40% 门槛, F6 重叠可控)
+  ⚠ case D: trigger_passive (22,396) >> clarification (3,075) → category=3 = 被动事件主导, 重写 thesis
+  ⚠ other = 30.4% > 20% → substring 漏检多, v2 须 LLM 分类
