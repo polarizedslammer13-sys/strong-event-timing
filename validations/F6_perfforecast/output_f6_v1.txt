@@ -1,0 +1,70 @@
+==== F6 业绩预告偏离度 v1 ====
+   N_DAYS valid = 3533, NSTOCK = 6144
+   date range: [20081216, 20230630]
+   year window: [2018, 2023]
+
+   GPF cells (first-record): 262,789
+   GPF total records (incl. revisions): 1,492,557
+   GPF cells with >1 record (revisions dropped): 139,764 (53.2%)
+
+   dropped NaN forecast: 98,848
+   dropped Floor>Ceiling inversion: 6,880
+   after sanity: 157,061
+
+   IAC events after first-per-(ii,perend) dedup: 38,729
+
+   IAS events after first-per-(ii,perend) dedup: 55,261
+
+   join match IAC: 23,818 / 157,061 (15.2%)
+   join match IAS: 15,753 / 157,061 (10.0%)
+   join match BOTH: 10,434 (6.6%)
+
+   winsorize forecast_dev at [pct1=-9.304, pct99=2.637]
+   winsorize SUE at         [pct1=-19.327, pct99=32.280]
+   final clean sample n = 20,024
+
+   CAR computed for 20,024 / 20,024 (window valid)
+   cluster: year_quarter × industry, n_clusters = 462, avg cluster size = 43.3
+
+==== Table 1: forecast_dev → CAR (短期+1~+10) ====
+   naive:    β=-0.00185, SE=0.00042, t=-4.47, n=20,024
+   clustered: β=-0.00185, SE=0.00074, t=-2.52, n_g=462
+   inflation factor t_naive/t_clust = 1.77
+   Q5-Q1 (forecast_dev): -0.00729
+
+==== Table 2: SUE → CAR 对照 (短期+1~+10) ====
+   naive:    β=-0.00029, SE=0.00018, t=-1.63, n=8,599
+   clustered: β=-0.00029, SE=0.00020, t=-1.47, n_g=388
+   Q5-Q1 (SUE): -0.00386
+
+==== Table 3: 双因子 OLS (forecast_dev + SUE) → CAR 短期 ====
+   n = 8,599 (in-sample horse race)
+   β_intercept = -0.00132, naive t = -1.35, clustered t = -0.61
+   β_forecast_dev = -0.00125, naive t = -1.83, clustered t = -1.09
+   β_SUE          = -0.00032, naive t = -1.77, clustered t = -1.54
+   corr(forecast_dev, SUE) = -0.0771
+
+==== Table 4a: ForcastType_INTEGER cohort 异质性 ====
+   type    n           β_naive    t_naive    β_clust    t_clust    Q5-Q1
+   --------------------------------------------------------------------------------
+   4        12,628    -0.00163     -3.42    -0.00163     -1.99   -0.00750
+   8         3,840    +0.00289     +0.78    +0.00289     +0.68   +0.00207
+   6         2,203    -0.00022     -0.04    -0.00022     -0.04   +0.00167
+   5           728    -0.01930     -1.55    -0.01930     -1.27   -0.02138
+   1           385    -0.00168     -0.24    -0.00168     -0.22   +0.00239
+   other       240    -0.00942     -2.34    -0.00942     -2.10   -0.00901
+
+==== Table 4b: lag_bucket cohort 异质性 (timing premium) ====
+   bucket               n           β_naive    t_naive    β_clust    t_clust    Q5-Q1
+   ------------------------------------------------------------------------------------------
+   pre-period(<0d)         7,429    -0.00133     -1.62    -0.00133     -0.87   -0.00669
+   early(0-30d)            8,270    -0.00190     -3.10    -0.00190     -2.18   -0.01245
+   mid(30-90d)             4,259    -0.00218     -2.73    -0.00218     -2.05   -0.00779
+   late(>90d)                 66    +0.02766     +1.95    +0.02766     +1.57   +0.10229
+   预测: lag<0 (提前定锚) β 最显著, late 最弱; 反之则 F6 thesis 在 timing 上失败
+
+==== Table 5: 双窗口 +1~+10 (短期) vs +1~+60 (PEAD) ====
+   window      n           β_naive    t_naive    β_clust    t_clust    Q5-Q1
+   --------------------------------------------------------------------------------
+   +1~+10        20,024    -0.00185     -4.47    -0.00185     -2.52   -0.00729
+   +1~+60        20,024    -0.00391     -4.05    -0.00391     -1.65   -0.01545

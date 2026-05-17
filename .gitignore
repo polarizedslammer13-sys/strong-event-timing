@@ -1,0 +1,23 @@
+# macOS
+.DS_Store
+
+# Backup / lock / temp files
+*.bak
+*.bak.*
+*.lock
+*.tmp
+*.swp
+
+# Claude internal state
+.agents/
+
+# Python
+__pycache__/
+*.pyc
+
+# IDE
+.vscode/
+.idea/
+
+# Skills cache (regenerated)
+# skills-lock.json kept intentionally
