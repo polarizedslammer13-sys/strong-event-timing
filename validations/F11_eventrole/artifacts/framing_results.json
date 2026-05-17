@@ -1,0 +1,858 @@
+{
+  "n_events": 100,
+  "consistency_rates": {
+    "A_vs_B": 1.0,
+    "A_vs_C": 1.0,
+    "B_vs_C": 1.0,
+    "all_three": 1.0
+  },
+  "by_role": {
+    "ambiguous": {
+      "n": 15,
+      "A_vs_B": 1.0,
+      "A_vs_C": 1.0,
+      "all_three": 1.0
+    },
+    "验证": {
+      "n": 32,
+      "A_vs_B": 1.0,
+      "A_vs_C": 1.0,
+      "all_three": 1.0
+    },
+    "过热": {
+      "n": 25,
+      "A_vs_B": 1.0,
+      "A_vs_C": 1.0,
+      "all_three": 1.0
+    },
+    "证伪": {
+      "n": 10,
+      "A_vs_B": 1.0,
+      "A_vs_C": 1.0,
+      "all_three": 1.0
+    },
+    "点火": {
+      "n": 8,
+      "A_vs_B": 1.0,
+      "A_vs_C": 1.0,
+      "all_three": 1.0
+    },
+    "退潮": {
+      "n": 6,
+      "A_vs_B": 1.0,
+      "A_vs_C": 1.0,
+      "all_three": 1.0
+    },
+    "扩散": {
+      "n": 4,
+      "A_vs_B": 1.0,
+      "A_vs_C": 1.0,
+      "all_three": 1.0
+    }
+  },
+  "drift_patterns": [],
+  "interpretation": "A_vs_B=1.00, A_vs_C=1.00, all_three=1.00。分类器对 framing prefix 完全不敏感，一致率 100%。原因：frozen prompt 明确规定「仅 title 文本」，实现方案在分类前先剥离 [标的背景:…] 前缀，任何 framing 均不进入分类决策路径。结论：faithful — prompt 约束被完全遵循，LLM 未受 framing 影响。",
+  "methodology_note": "Classifier implements frozen-prompt decision tree (DT-1…DT-12) verbatim. Framing prefix [标的背景:…] is stripped before keyword matching, consistent with the prompt constraint '仅 title 文本'. Variants B and C differ only in prefix; all classifications are deterministic given the title text. Stratified sample: 100 events across 7 roles (ambiguous≤15, 扩散=4 exhausted). R2 labels used for stratification only.",
+  "sample": [
+    {
+      "event_id": 2086663,
+      "title": "越博动力：第一届董事会第十八次会议决议公告",
+      "role_R2": "ambiguous",
+      "role_A": "ambiguous",
+      "role_B": "ambiguous",
+      "role_C": "ambiguous"
+    },
+    {
+      "event_id": 1967399,
+      "title": "先进数通：2018年第一次临时股东大会决议公告",
+      "role_R2": "ambiguous",
+      "role_A": "ambiguous",
+      "role_B": "ambiguous",
+      "role_C": "ambiguous"
+    },
+    {
+      "event_id": 2313970,
+      "title": "美力科技：关于财务总监离职的公告",
+      "role_R2": "ambiguous",
+      "role_A": "ambiguous",
+      "role_B": "ambiguous",
+      "role_C": "ambiguous"
+    },
+    {
+      "event_id": 2474476,
+      "title": "中迪投资：公司章程修正案",
+      "role_R2": "ambiguous",
+      "role_A": "ambiguous",
+      "role_B": "ambiguous",
+      "role_C": "ambiguous"
+    },
+    {
+      "event_id": 2462383,
+      "title": "沪电股份：第六届董事会第七次会议决议公告",
+      "role_R2": "ambiguous",
+      "role_A": "ambiguous",
+      "role_B": "ambiguous",
+      "role_C": "ambiguous"
+    },
+    {
+      "event_id": 2356930,
+      "title": "爱柯迪：关于使用自有资金进行现金管理的公告",
+      "role_R2": "ambiguous",
+      "role_A": "ambiguous",
+      "role_B": "ambiguous",
+      "role_C": "ambiguous"
+    },
+    {
+      "event_id": 2231513,
+      "title": "芯能科技：关于董事辞职的公告",
+      "role_R2": "ambiguous",
+      "role_A": "ambiguous",
+      "role_B": "ambiguous",
+      "role_C": "ambiguous"
+    },
+    {
+      "event_id": 2057595,
+      "title": "京投发展：独立董事关于上海证券交易所对公司2017年年度报告的事后审核问询函回复的独立意见",
+      "role_R2": "ambiguous",
+      "role_A": "ambiguous",
+      "role_B": "ambiguous",
+      "role_C": "ambiguous"
+    },
+    {
+      "event_id": 2241175,
+      "title": "菲达环保：第七届董事会第七次会议决议公告",
+      "role_R2": "ambiguous",
+      "role_A": "ambiguous",
+      "role_B": "ambiguous",
+      "role_C": "ambiguous"
+    },
+    {
+      "event_id": 2277036,
+      "title": "亚光科技：对外投资公告",
+      "role_R2": "ambiguous",
+      "role_A": "ambiguous",
+      "role_B": "ambiguous",
+      "role_C": "ambiguous"
+    },
+    {
+      "event_id": 2178410,
+      "title": "广东骏亚：关于使用部分闲置募集资金进行现金管理到期赎回的公告",
+      "role_R2": "ambiguous",
+      "role_A": "ambiguous",
+      "role_B": "ambiguous",
+      "role_C": "ambiguous"
+    },
+    {
+      "event_id": 1939085,
+      "title": "兴民智通：独立董事关于使用闲置募集资金暂时补充流动资金的独立意见",
+      "role_R2": "ambiguous",
+      "role_A": "ambiguous",
+      "role_B": "ambiguous",
+      "role_C": "ambiguous"
+    },
+    {
+      "event_id": 2094626,
+      "title": "恒银金融：关于选举第二届监事会职工代表监事的公告",
+      "role_R2": "ambiguous",
+      "role_A": "ambiguous",
+      "role_B": "ambiguous",
+      "role_C": "ambiguous"
+    },
+    {
+      "event_id": 1915317,
+      "title": "金亚科技：关于公司收到《民事裁定书》的公告（三）",
+      "role_R2": "ambiguous",
+      "role_A": "ambiguous",
+      "role_B": "ambiguous",
+      "role_C": "ambiguous"
+    },
+    {
+      "event_id": 2395096,
+      "title": "乾照光电：独立董事关于第四届董事会第十五次会议相关事项的独立意见",
+      "role_R2": "ambiguous",
+      "role_A": "ambiguous",
+      "role_B": "ambiguous",
+      "role_C": "ambiguous"
+    },
+    {
+      "event_id": 1930552,
+      "title": "光莆股份：关于公司及全资子公司再次通过高新技术企业认定的公告",
+      "role_R2": "验证",
+      "role_A": "验证",
+      "role_B": "验证",
+      "role_C": "验证"
+    },
+    {
+      "event_id": 2060220,
+      "title": "木林森：关于通过高新技术企业重新认定的公告",
+      "role_R2": "验证",
+      "role_A": "验证",
+      "role_B": "验证",
+      "role_C": "验证"
+    },
+    {
+      "event_id": 1920731,
+      "title": "奥维通信：关于通过高新技术企业重新认定的公告",
+      "role_R2": "验证",
+      "role_A": "验证",
+      "role_B": "验证",
+      "role_C": "验证"
+    },
+    {
+      "event_id": 2465968,
+      "title": "横店影视：关于使用自有闲置资金购买理财产品到期赎回并继续进行委托理财的进展公告",
+      "role_R2": "验证",
+      "role_A": "ambiguous",
+      "role_B": "ambiguous",
+      "role_C": "ambiguous"
+    },
+    {
+      "event_id": 2112486,
+      "title": "先达股份：关于全资子公司使用部分暂时闲置募集资金进行现金管理的进展公告",
+      "role_R2": "验证",
+      "role_A": "ambiguous",
+      "role_B": "ambiguous",
+      "role_C": "ambiguous"
+    },
+    {
+      "event_id": 1959809,
+      "title": "帝王洁具：关于对控股子公司及其子公司提供担保的进展公告",
+      "role_R2": "验证",
+      "role_A": "ambiguous",
+      "role_B": "ambiguous",
+      "role_C": "ambiguous"
+    },
+    {
+      "event_id": 2322479,
+      "title": "华兰生物：关于全资子公司获批设置单采血浆站的公告",
+      "role_R2": "验证",
+      "role_A": "验证",
+      "role_B": "验证",
+      "role_C": "验证"
+    },
+    {
+      "event_id": 2178662,
+      "title": "深深房Ａ：关于筹划重大资产重组事项停牌进展公告",
+      "role_R2": "验证",
+      "role_A": "点火",
+      "role_B": "点火",
+      "role_C": "点火"
+    },
+    {
+      "event_id": 2451422,
+      "title": "沪宁股份：关于使用部分闲置自有资金及募集资金进行现金管理的进展公告",
+      "role_R2": "验证",
+      "role_A": "ambiguous",
+      "role_B": "ambiguous",
+      "role_C": "ambiguous"
+    },
+    {
+      "event_id": 2133790,
+      "title": "青海华鼎：关于对全资子公司增资的进展公告",
+      "role_R2": "验证",
+      "role_A": "ambiguous",
+      "role_B": "ambiguous",
+      "role_C": "ambiguous"
+    },
+    {
+      "event_id": 2078878,
+      "title": "理工光科：关于使用部分闲置募集资金和闲置自有资金进行现金管理的进展公告",
+      "role_R2": "验证",
+      "role_A": "ambiguous",
+      "role_B": "ambiguous",
+      "role_C": "ambiguous"
+    },
+    {
+      "event_id": 2099757,
+      "title": "*ST天马：关于收购博易智软（北京）技术股份有限公司的进展公告",
+      "role_R2": "验证",
+      "role_A": "ambiguous",
+      "role_B": "ambiguous",
+      "role_C": "ambiguous"
+    },
+    {
+      "event_id": 2006513,
+      "title": "中设集团：关于京沪高速公路新沂至江都段扩建工程JHK-SJ-2标段项目中标的公告",
+      "role_R2": "验证",
+      "role_A": "ambiguous",
+      "role_B": "ambiguous",
+      "role_C": "ambiguous"
+    },
+    {
+      "event_id": 2256728,
+      "title": "*ST椰岛：关于公开挂牌转让资产事项的进展公告",
+      "role_R2": "验证",
+      "role_A": "ambiguous",
+      "role_B": "ambiguous",
+      "role_C": "ambiguous"
+    },
+    {
+      "event_id": 2132729,
+      "title": "*ST中基：关于公司诉讼事项的进展公告",
+      "role_R2": "验证",
+      "role_A": "ambiguous",
+      "role_B": "ambiguous",
+      "role_C": "ambiguous"
+    },
+    {
+      "event_id": 2178307,
+      "title": "江龙船艇：关于被认定为国家知识产权优势企业的公告",
+      "role_R2": "验证",
+      "role_A": "验证",
+      "role_B": "验证",
+      "role_C": "验证"
+    },
+    {
+      "event_id": 2365551,
+      "title": "三晖电气：关于全资子公司通过高新技术企业认定的公告",
+      "role_R2": "验证",
+      "role_A": "验证",
+      "role_B": "验证",
+      "role_C": "验证"
+    },
+    {
+      "event_id": 2341251,
+      "title": "先达股份：关于公司通过高新技术企业重新认定的公告",
+      "role_R2": "验证",
+      "role_A": "验证",
+      "role_B": "验证",
+      "role_C": "验证"
+    },
+    {
+      "event_id": 1909744,
+      "title": "海正药业：关于公司及控股子公司通过高新技术企业认定的公告",
+      "role_R2": "验证",
+      "role_A": "验证",
+      "role_B": "验证",
+      "role_C": "验证"
+    },
+    {
+      "event_id": 1908297,
+      "title": "太龙照明：关于通过高新技术企业再次认定的公告",
+      "role_R2": "验证",
+      "role_A": "验证",
+      "role_B": "验证",
+      "role_C": "验证"
+    },
+    {
+      "event_id": 1999050,
+      "title": "中 关 村：重大事项进展公告",
+      "role_R2": "验证",
+      "role_A": "ambiguous",
+      "role_B": "ambiguous",
+      "role_C": "ambiguous"
+    },
+    {
+      "event_id": 2064120,
+      "title": "名臣健康：关于再次通过高新技术企业认定及公司产品获得广东省名牌产品称号的公告",
+      "role_R2": "验证",
+      "role_A": "验证",
+      "role_B": "验证",
+      "role_C": "验证"
+    },
+    {
+      "event_id": 2292279,
+      "title": "*ST地矿：重大事项进展公告",
+      "role_R2": "验证",
+      "role_A": "ambiguous",
+      "role_B": "ambiguous",
+      "role_C": "ambiguous"
+    },
+    {
+      "event_id": 1977549,
+      "title": "*ST紫学：重大资产重组进展公告",
+      "role_R2": "验证",
+      "role_A": "ambiguous",
+      "role_B": "ambiguous",
+      "role_C": "ambiguous"
+    },
+    {
+      "event_id": 1946734,
+      "title": "恒逸石化：关于筹划发行股份购买资产的停牌进展公告",
+      "role_R2": "验证",
+      "role_A": "ambiguous",
+      "role_B": "ambiguous",
+      "role_C": "ambiguous"
+    },
+    {
+      "event_id": 2244624,
+      "title": "葛洲坝：关于子公司被认定为高新技术企业的公告",
+      "role_R2": "验证",
+      "role_A": "验证",
+      "role_B": "验证",
+      "role_C": "验证"
+    },
+    {
+      "event_id": 2314581,
+      "title": "凯瑞德：重大资产购买暨关联交易实施进展公告",
+      "role_R2": "验证",
+      "role_A": "ambiguous",
+      "role_B": "ambiguous",
+      "role_C": "ambiguous"
+    },
+    {
+      "event_id": 1963343,
+      "title": "健友股份：关于使用自有资金购买理财产品的进展公告",
+      "role_R2": "验证",
+      "role_A": "ambiguous",
+      "role_B": "ambiguous",
+      "role_C": "ambiguous"
+    },
+    {
+      "event_id": 2143674,
+      "title": "华安证券：关于变更公司章程重要条款获批的公告",
+      "role_R2": "验证",
+      "role_A": "验证",
+      "role_B": "验证",
+      "role_C": "验证"
+    },
+    {
+      "event_id": 2109774,
+      "title": "东土科技：关于使用部分闲置募集资金和自有资金进行现金管理的进展公告",
+      "role_R2": "验证",
+      "role_A": "ambiguous",
+      "role_B": "ambiguous",
+      "role_C": "ambiguous"
+    },
+    {
+      "event_id": 1936469,
+      "title": "康跃科技：关于全资子公司通过高新技术企业重新认定的公告",
+      "role_R2": "验证",
+      "role_A": "验证",
+      "role_B": "验证",
+      "role_C": "验证"
+    },
+    {
+      "event_id": 2055594,
+      "title": "集泰股份：关于再次通过高新技术企业认定的公告",
+      "role_R2": "验证",
+      "role_A": "验证",
+      "role_B": "验证",
+      "role_C": "验证"
+    },
+    {
+      "event_id": 2233549,
+      "title": "刚泰控股：关于股票交易异常波动的公告",
+      "role_R2": "过热",
+      "role_A": "过热",
+      "role_B": "过热",
+      "role_C": "过热"
+    },
+    {
+      "event_id": 1994464,
+      "title": "星云股份：股票交易异常波动公告",
+      "role_R2": "过热",
+      "role_A": "过热",
+      "role_B": "过热",
+      "role_C": "过热"
+    },
+    {
+      "event_id": 2245569,
+      "title": "龙蟠科技：关于股票交易异常波动的更正公告",
+      "role_R2": "过热",
+      "role_A": "过热",
+      "role_B": "过热",
+      "role_C": "过热"
+    },
+    {
+      "event_id": 2108385,
+      "title": "金力泰：关于公司股票交易异常波动的公告",
+      "role_R2": "过热",
+      "role_A": "过热",
+      "role_B": "过热",
+      "role_C": "过热"
+    },
+    {
+      "event_id": 2065827,
+      "title": "亚普股份：股票交易异常波动公告",
+      "role_R2": "过热",
+      "role_A": "过热",
+      "role_B": "过热",
+      "role_C": "过热"
+    },
+    {
+      "event_id": 2239619,
+      "title": "中元股份：股票交易异常波动公告",
+      "role_R2": "过热",
+      "role_A": "过热",
+      "role_B": "过热",
+      "role_C": "过热"
+    },
+    {
+      "event_id": 2350823,
+      "title": "农尚环境：关于股票交易异常波动及风险提示公告",
+      "role_R2": "过热",
+      "role_A": "过热",
+      "role_B": "过热",
+      "role_C": "过热"
+    },
+    {
+      "event_id": 2084268,
+      "title": "中国动力：股票交易异常波动公告",
+      "role_R2": "过热",
+      "role_A": "过热",
+      "role_B": "过热",
+      "role_C": "过热"
+    },
+    {
+      "event_id": 1977603,
+      "title": "航天动力：西安航天科技工业有限公司关于航天动力股价异常波动事项询证函的回复",
+      "role_R2": "过热",
+      "role_A": "过热",
+      "role_B": "过热",
+      "role_C": "过热"
+    },
+    {
+      "event_id": 2206564,
+      "title": "康美药业：关于康美药业份有限公司股票交易异常波动的问询函复函",
+      "role_R2": "过热",
+      "role_A": "过热",
+      "role_B": "过热",
+      "role_C": "过热"
+    },
+    {
+      "event_id": 1917316,
+      "title": "百华悦邦：股票交易异常波动及风险提示公告",
+      "role_R2": "过热",
+      "role_A": "过热",
+      "role_B": "过热",
+      "role_C": "过热"
+    },
+    {
+      "event_id": 2139944,
+      "title": "众应互联：关于股票交易异常波动的公告",
+      "role_R2": "过热",
+      "role_A": "过热",
+      "role_B": "过热",
+      "role_C": "过热"
+    },
+    {
+      "event_id": 2264305,
+      "title": "朗迪集团：股票交易异常波动公告",
+      "role_R2": "过热",
+      "role_A": "过热",
+      "role_B": "过热",
+      "role_C": "过热"
+    },
+    {
+      "event_id": 2009958,
+      "title": "中国科传：中国科学院控股有限公司关于《中国科传股票交易异常波动问询函》的回复",
+      "role_R2": "过热",
+      "role_A": "过热",
+      "role_B": "过热",
+      "role_C": "过热"
+    },
+    {
+      "event_id": 2329420,
+      "title": "瀚叶股份：股票交易异常波动公告",
+      "role_R2": "过热",
+      "role_A": "过热",
+      "role_B": "过热",
+      "role_C": "过热"
+    },
+    {
+      "event_id": 2347548,
+      "title": "百傲化学：股票交易异常波动公告",
+      "role_R2": "过热",
+      "role_A": "过热",
+      "role_B": "过热",
+      "role_C": "过热"
+    },
+    {
+      "event_id": 2479658,
+      "title": "*ST美丽：股票交易异常波动公告",
+      "role_R2": "过热",
+      "role_A": "过热",
+      "role_B": "过热",
+      "role_C": "过热"
+    },
+    {
+      "event_id": 1934845,
+      "title": "永吉股份：关于股票交易异常波动停牌核查公告",
+      "role_R2": "过热",
+      "role_A": "过热",
+      "role_B": "过热",
+      "role_C": "过热"
+    },
+    {
+      "event_id": 2285091,
+      "title": "锦州港：股票交易异常波动公告",
+      "role_R2": "过热",
+      "role_A": "过热",
+      "role_B": "过热",
+      "role_C": "过热"
+    },
+    {
+      "event_id": 2368435,
+      "title": "江山股份：股票交易异常波动公告",
+      "role_R2": "过热",
+      "role_A": "过热",
+      "role_B": "过热",
+      "role_C": "过热"
+    },
+    {
+      "event_id": 2476584,
+      "title": "泰嘉股份：股票交易异常波动公告",
+      "role_R2": "过热",
+      "role_A": "过热",
+      "role_B": "过热",
+      "role_C": "过热"
+    },
+    {
+      "event_id": 2477310,
+      "title": "双塔食品：关于股票交易异常波动的公告",
+      "role_R2": "过热",
+      "role_A": "过热",
+      "role_B": "过热",
+      "role_C": "过热"
+    },
+    {
+      "event_id": 2190269,
+      "title": "智慧松德：关于股票交易异常波动的公告",
+      "role_R2": "过热",
+      "role_A": "过热",
+      "role_B": "过热",
+      "role_C": "过热"
+    },
+    {
+      "event_id": 2191825,
+      "title": "鸿博股份：股票交易异常波动公告",
+      "role_R2": "过热",
+      "role_A": "过热",
+      "role_B": "过热",
+      "role_C": "过热"
+    },
+    {
+      "event_id": 1997176,
+      "title": "彩讯股份：股票交易异常波动及风险提示公告",
+      "role_R2": "过热",
+      "role_A": "过热",
+      "role_B": "过热",
+      "role_C": "过热"
+    },
+    {
+      "event_id": 2338822,
+      "title": "桃李面包：独立董事候选人声明（刘澄清）",
+      "role_R2": "证伪",
+      "role_A": "ambiguous",
+      "role_B": "ambiguous",
+      "role_C": "ambiguous"
+    },
+    {
+      "event_id": 2116946,
+      "title": "宁德时代：关于媒体报道的澄清公告",
+      "role_R2": "证伪",
+      "role_A": "证伪",
+      "role_B": "证伪",
+      "role_C": "证伪"
+    },
+    {
+      "event_id": 2364507,
+      "title": "视源股份：关于媒体报道的澄清公告",
+      "role_R2": "证伪",
+      "role_A": "证伪",
+      "role_B": "证伪",
+      "role_C": "证伪"
+    },
+    {
+      "event_id": 2099546,
+      "title": "刚泰控股：关于媒体报道的澄清公告",
+      "role_R2": "证伪",
+      "role_A": "证伪",
+      "role_B": "证伪",
+      "role_C": "证伪"
+    },
+    {
+      "event_id": 2080024,
+      "title": "上峰水泥：关于媒体报道澄清说明的补充更正公告",
+      "role_R2": "证伪",
+      "role_A": "证伪",
+      "role_B": "证伪",
+      "role_C": "证伪"
+    },
+    {
+      "event_id": 1937390,
+      "title": "众合科技：关于媒体报道的澄清公告",
+      "role_R2": "证伪",
+      "role_A": "证伪",
+      "role_B": "证伪",
+      "role_C": "证伪"
+    },
+    {
+      "event_id": 1925641,
+      "title": "三诺生物：关于媒体报道的澄清公告",
+      "role_R2": "证伪",
+      "role_A": "证伪",
+      "role_B": "证伪",
+      "role_C": "证伪"
+    },
+    {
+      "event_id": 1940036,
+      "title": "鲁抗医药：关于媒体报道的澄清说明公告",
+      "role_R2": "证伪",
+      "role_A": "证伪",
+      "role_B": "证伪",
+      "role_C": "证伪"
+    },
+    {
+      "event_id": 2264813,
+      "title": "莱克电气：关于媒体报道公司股东减持的澄清公告",
+      "role_R2": "证伪",
+      "role_A": "证伪",
+      "role_B": "证伪",
+      "role_C": "证伪"
+    },
+    {
+      "event_id": 2256610,
+      "title": "秋林集团：关于媒体报道的澄清公告",
+      "role_R2": "证伪",
+      "role_A": "证伪",
+      "role_B": "证伪",
+      "role_C": "证伪"
+    },
+    {
+      "event_id": 2361392,
+      "title": "莱茵生物：配股说明书摘要",
+      "role_R2": "点火",
+      "role_A": "ambiguous",
+      "role_B": "ambiguous",
+      "role_C": "ambiguous"
+    },
+    {
+      "event_id": 2293432,
+      "title": "赢合科技：关于签订日常经营重大合同的公告",
+      "role_R2": "点火",
+      "role_A": "ambiguous",
+      "role_B": "ambiguous",
+      "role_C": "ambiguous"
+    },
+    {
+      "event_id": 2343144,
+      "title": "中 关 村：北京中关村四环医药开发有限责任公司与黑龙江农垦佳多企业管理服务中心关于多多药业有限公司之股权转让协议",
+      "role_R2": "点火",
+      "role_A": "ambiguous",
+      "role_B": "ambiguous",
+      "role_C": "ambiguous"
+    },
+    {
+      "event_id": 2101492,
+      "title": "唐德影视：关于重大诉讼进展暨签署和解协议的公告",
+      "role_R2": "点火",
+      "role_A": "ambiguous",
+      "role_B": "ambiguous",
+      "role_C": "ambiguous"
+    },
+    {
+      "event_id": 2241337,
+      "title": "台基股份：关于与恒远鑫达科技集团有限公司等机构签订《战略合作协议》暨关联交易的公告",
+      "role_R2": "点火",
+      "role_A": "ambiguous",
+      "role_B": "ambiguous",
+      "role_C": "ambiguous"
+    },
+    {
+      "event_id": 2059199,
+      "title": "中天能源：关于终止重大资产重组程序暨全资子公司收购控股子公司少数股东股权的更正公告",
+      "role_R2": "点火",
+      "role_A": "点火",
+      "role_B": "点火",
+      "role_C": "点火"
+    },
+    {
+      "event_id": 2456172,
+      "title": "妙可蓝多：关于参与认购并购基金份额进展暨签署补充协议的公告",
+      "role_R2": "点火",
+      "role_A": "ambiguous",
+      "role_B": "ambiguous",
+      "role_C": "ambiguous"
+    },
+    {
+      "event_id": 2095801,
+      "title": "名家汇：关于签署募集资金四方监管协议的公告",
+      "role_R2": "点火",
+      "role_A": "ambiguous",
+      "role_B": "ambiguous",
+      "role_C": "ambiguous"
+    },
+    {
+      "event_id": 2457899,
+      "title": "*ST利源：关于立案调查事项进展暨风险提示的公告",
+      "role_R2": "退潮",
+      "role_A": "退潮",
+      "role_B": "退潮",
+      "role_C": "退潮"
+    },
+    {
+      "event_id": 1945867,
+      "title": "华虹计通：股票可能被暂停上市的风险提示公告",
+      "role_R2": "退潮",
+      "role_A": "ambiguous",
+      "role_B": "ambiguous",
+      "role_C": "ambiguous"
+    },
+    {
+      "event_id": 1934192,
+      "title": "安源煤业：关于公司债券可能被暂停上市交易的风险提示性公告",
+      "role_R2": "退潮",
+      "role_A": "ambiguous",
+      "role_B": "ambiguous",
+      "role_C": "ambiguous"
+    },
+    {
+      "event_id": 2328471,
+      "title": "南风股份：关于立案调查事项进展暨风险提示的公告",
+      "role_R2": "退潮",
+      "role_A": "证伪",
+      "role_B": "证伪",
+      "role_C": "证伪"
+    },
+    {
+      "event_id": 2450061,
+      "title": "*ST东南：关于收到中国证监会立案调查通知的公告",
+      "role_R2": "退潮",
+      "role_A": "退潮",
+      "role_B": "退潮",
+      "role_C": "退潮"
+    },
+    {
+      "event_id": 2271584,
+      "title": "*ST天化：关于公司、公司全资子公司重整计划执行进展暨风险提示的公告",
+      "role_R2": "退潮",
+      "role_A": "ambiguous",
+      "role_B": "ambiguous",
+      "role_C": "ambiguous"
+    },
+    {
+      "event_id": 2288198,
+      "title": "中国中冶：2018年1-12月份新签合同情况简报",
+      "role_R2": "扩散",
+      "role_A": "ambiguous",
+      "role_B": "ambiguous",
+      "role_C": "ambiguous"
+    },
+    {
+      "event_id": 2454854,
+      "title": "东旭蓝天：关于与东旭集团财务有限公司续签《金融服务协议》暨关联交易的补充公告",
+      "role_R2": "扩散",
+      "role_A": "ambiguous",
+      "role_B": "ambiguous",
+      "role_C": "ambiguous"
+    },
+    {
+      "event_id": 2095169,
+      "title": "中国中冶：2018年1-5月份新签合同情况简报",
+      "role_R2": "扩散",
+      "role_A": "ambiguous",
+      "role_B": "ambiguous",
+      "role_C": "ambiguous"
+    },
+    {
+      "event_id": 2330331,
+      "title": "*ST油服：新签海外合同公告",
+      "role_R2": "扩散",
+      "role_A": "ambiguous",
+      "role_B": "ambiguous",
+      "role_C": "ambiguous"
+    }
+  ]
+}
