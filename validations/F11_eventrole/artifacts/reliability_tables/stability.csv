@@ -1,0 +1,8 @@
+r2_confidence,r2_role,count,gold_accuracy
+high,过热,40,1.0
+high,退潮,6,0.5
+high,验证,39,1.0
+mid,退潮,2,0.0
+mid,证伪,20,1.0
+mid,验证,7,0.1429
+low,ambiguous,86,0.9884
