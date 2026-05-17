@@ -1,0 +1,43 @@
+==== F10 alt 公告数据集 freshness probe ====
+   N_DAYS=3533, NSTOCK=6144
+   uv.Dates[0]=20081216, uv.Dates[N_DAYS-1]=20230630
+
+==== GildataAnnouncement ====
+   cells=151,455, events=295,944
+   di range: [987, 3532]
+   date range: [20130108, 20230630]
+   ✓ FRESH (max date ≥ 2023-01)
+
+==== EastmoneyAnnouncementevent ====
+   cells=1,052,373, events=2,876,657
+   di range: [1, 2797]
+   date range: [20081217, 20200618]
+   ✗ STALE (max date < 2021-01)
+
+==== GildataNewsAbstract ====
+   cells=26,967, events=26,972
+   di range: [986, 3199]
+   date range: [20130107, 20220216]
+   ~ partial fresh (max date in 2021-2022)
+
+==== CninfoAnnouncement ====
+   cells=837,835, events=2,481,619
+   di range: [0, 2550]
+   date range: [20081216, 20190614]
+   ✗ STALE (max date < 2021-01)
+
+==== uv.Dates 关键 di 对应日期 (校准 di → date 映射) ====
+   uv.Dates[0] = 20081216
+   uv.Dates[500] = 20110106
+   uv.Dates[1000] = 20130125
+   uv.Dates[1500] = 20150225
+   uv.Dates[2000] = 20170313
+   uv.Dates[2200] = 20180102
+   uv.Dates[2500] = 20190329
+   uv.Dates[2550] = 20190614
+   uv.Dates[2700] = 20200121
+   uv.Dates[3000] = 20210420
+   uv.Dates[3173] = 20220104
+   uv.Dates[3300] = 20220715
+   uv.Dates[3500] = 20230515
+   uv.Dates[3532] = 20230630

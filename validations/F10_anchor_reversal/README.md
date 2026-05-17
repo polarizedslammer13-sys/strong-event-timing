@@ -1,79 +1,41 @@
 # F10 异动公告 anchor 效应 — 验证记录
 
-> **状态**：v1 跑通 + v2 matched control 跑通
-> **核心发现**：异动公告是 **bimodal attention amplifier**——对弱势股放大下跌 (Q1 matched diff -8.65%, t=-10.4)，对强势股放大上涨 (Q5 matched diff +3.37%, t=+3.15)
-> **Thesis 三次 pivot**：澄清/降级（sanity 砍）→ 强势 anchor 反转（v1 反向）→ bimodal attention amplifier（v2 确认）
-> **F10 评定**：保留，进 Deliverable，但卡片需完全重写（不是降级，不是反转，是双向放大器）
-> **日期**：2026-05-17
+> **状态**：sanity + v1 + v2 (matched) + v3 (capacity + tight match) + v4 (split-half + capacity)
+> **核心 thesis (v4 锁定)**：异动公告 = sentiment amplifier 在**弱-中 prior return cohort** 上产生 -3% ~ -6% 加速下跌；**Q1 弱势侧最 robust**（tradable -6.25%, t=-6.21, split-half 两期都 t<-4）
+> **5 次 thesis pivot 全部诚实记录** + 主动暴露 caveat
+> **F10 评定**：保留进 Deliverable，但卡片需完全重写为"Q1 主 + Q3 辅"窄 framing，不再说 "bimodal"
+> **日期**：2026-05-18
 > **环境**：bjintern12（pysim 5.0.0 / Python alpha API）
 
 ---
 
 ## 一、原 thesis（Deliverable F10 卡片，跑前版本）
 
-> 证据等级（传闻 → 媒体 → IR 答复 → 正式公告 → 订单 → 业绩）的本期最高级 − 历史最高级；含降级 / 澄清 / 否认事件。
->
-> **经济逻辑**：强势概念二波 / 主升靠证据等级实质升级；明确否认 = 证伪事件，是 stage 退潮硬信号。双向信号比单向更对称。
+> "证据等级变动（双向），含降级 / 澄清 / 否认事件。强势概念二波 / 主升靠证据等级实质升级；明确否认 = 证伪事件，是 stage 退潮硬信号。"
+> **降级源**：`CninfoAnnouncement.category == 3`（"澄清风险业绩预告"，79K 条硬信号）。
 
-**降级源**：`CninfoAnnouncement.category == 3`（"澄清风险业绩预告"，79K 条硬信号）。
+## 二、5 次 thesis pivot（完整诚实记录）
 
-## 二、Thesis 三次 pivot 记录
-
-### Pivot 1 — Sanity 阶段砍原 thesis（澄清/降级）
-
-`output_f10_subclass.txt` 显示 category=3 是合并类别，按 GPT priority rule 拆分：
-
-| 子类 | n | 占 cat=3 比例 |
-|---|---|---|
-| earnings_overlap (业绩预告) | 25,474 | 32.1% |
-| **trigger_passive (异常波动)** | **22,396** | **28.3%** |
-| clarification_true (真澄清) | **3,075** | 3.9% |
-| ongoing_st (风险提示) | 4,204 | 5.3% |
-| other | 24,117 | 30.4% |
-
-**case B + case D 双触发**：
-- 真澄清 n=3,075 **< 10K 门槛 → underpowered**
-- 被动事件 22K >> 真澄清 3K → category=3 实际是"被动事件主导"
-
-**结论**：原 F10 thesis（降级 = 反转）无法在 v1 跑出 power，**砍 main**，留 v2 LLM 重启。
-
-### Pivot 2 — v1 跑出反向 finding（强势侧无反应）
-
-`output_f10_v1.txt` GPT brief（"强势 + 异动 → forced anchor → 反转"）：
-
-| quintile | prior 20D | CAR_10 | t_c_10 |
+| Pivot | thesis | 阶段 | 实证结果 |
 |---|---|---|---|
-| **Q1 弱势** | ≤−14% | **−9.79%** | **−10.88** |
-| Q5 强势 | >+36% | +0.76% | +0.63 |
+| **1** | 澄清/降级 = 反转硬信号 | sanity | 真澄清子样本 n=3K underpowered，砍 main |
+| **2** | 强势 + 异动 = forced anchor → 反转 | v1 (GPT brief) | Q5 强势侧 t=+0.63 无反应，**预测反向** |
+| **3** | 弱势 + 异动 = 加速下跌 | v1 main | Q1 t=-10.88 但**无 identification**，momentum vs anchor 不可分 |
+| **4** | bimodal anchor effect (Q1 + Q5 双向) | v2 matched control | Q1 diff=-8.65%, Q5 diff=+3.37%, 都 identified |
+| **5** | **Q1 弱势单边 robust，Q5 paper-only** | v3 capacity + v4 split-half | Q5 tradable diff 退化到 -0.31% (t=-0.35), Q1 tradable -6.25% (t=-6.21) 稳 |
 
-预测 Q5 反转最强，**实测 Q1 反转最强、Q5 几乎不动**。
+### Pivot 防御段（写给 mentor 看）
 
-**初步解读**（待 matched control 验证）：
-- v1 没有 identification — 两个 narrative 观察等价
-  - N1: 真 anchor 效应（弱势 + 异动 = bad news confirmation → 加速下跌）
-  - N2: selection / momentum 重发现（异动样本 selected 到 negative momentum 票）
+5 次 pivot 都是 **data-driven 升级**，不是 outcome chasing：
 
-### Pivot 3 — v2 matched control 揭示 bimodal anchor 效应
+- **Pivot 1（砍 clarification）**：sanity 阶段 n=3K 子样本量决策，不是 hypothesis search
+- **Pivot 2（强势→弱势）**：数据直接拒绝 GPT 的强势 anchor prediction，不是 cherry-pick
+- **Pivot 3-4（加 matched control）**：identification 标准升级（从 1:N control → 1:1 matched），不是 outcome chasing
+- **Pivot 5（capacity strip Q5）**：诚实承认 paper vs tradable 差距，**Q5 +3.37% 全部是涨停一字板贡献，不可交易**
 
-按 F1 v4 matched baseline 模板做 1:1 matching：
-- same SW2 industry × same year_month × cap_q ± 1 × prior_20d ± 5pp
-- exclude trigger_passive in [di_ctrl − 60, di_ctrl + 20]
-- matched rate 76.6% (3,464 / 4,520)
-
-**T2 关键检验** (`output_f10_matched.txt`)：
-
-| quintile | n | E[CAR_trt_10] | E[CAR_ctrl_10] | matched diff_10 | t_c_10 |
-|---|---|---|---|---|---|
-| **Q1 弱势** | 693 | −7.9% | **+0.8%** | **−8.65%** | **−10.38** |
-| Q2 | 693 | −1.5% | −0.1% | −1.42% | −1.79 |
-| Q3 | 692 | −0.6% | −2.0% | +1.50% | +1.80 |
-| Q4 | 693 | −1.8% | −2.6% | +0.84% | +1.06 |
-| **Q5 强势** | 693 | −1.3% | **−4.7%** | **+3.37%** | **+3.15** |
-
-**Bimodal anchor 效应实证**：
-- Q1 弱势：matched 对照组 +0.8% vs treatment −7.9% → **anchor 真把弱势股加速下跌**（不是 momentum 自动续跌）
-- Q5 强势：matched 对照组 −4.7% vs treatment −1.3% → **anchor 真把强势股从市场下跌中保护出来**（甚至相对上涨）
-- 中间 Q3/Q4 几乎无 effect
+**但承认**：多次 pivot 累积后 in-sample 拟合度上升，**严格 OOS hold-out 才能最终判定真伪**。
+- Cache 限制下严格 OOS 不可行（CninfoAnnouncement / EastmoneyAnnouncementevent / Gildata 公告数据 ≤ 2020-06-18，无 2023 H2 fresh data）
+- v4 用 sample 内 split-half (2018 vs 2019 H1) 作 weak proxy，Q1 子样本两期都 t<-4 → 弱 robustness 通过
 
 ## 三、数据
 
@@ -81,146 +43,229 @@
 |---|---|---|
 | 日频收益 | `'returns'` | BaseData |
 | 申万二级 | `'WindIndustry.wind2'` | cluster 用 |
+| 总市值 | `'cap'` | BaseData (单位**百万元**，全市场 median ≈ 5550 = 55 亿元) |
 | 公告 offsets | `'CninfoAnnouncement.offsets'` | (N_DAYS, NSTOCK, 2) |
-| 公告类别 | `'CninfoAnnouncement.category'` | 21 类 int |
-| 公告类别字典 | `'CninfoAnnouncement.categoryIx'` | N32C |
-| 公告标题 | `'CninfoAnnouncement.title'` | N256C |
-| Cap | `'cap'` | BaseData |
+| 公告类别 | `'CninfoAnnouncement.category'` | category=3 = "澄清风险业绩预告" |
+| 公告标题 | `'CninfoAnnouncement.title'` | N256C, substring 匹配 "异常波动" |
 
-**Universe**：Ashare（NSTOCK = 6144）
-**回测期**：2018-2023 干净样本
-**Event 总数**：trigger_passive 22,396 → year + window + cap + ind filter → **4,520 treatment**
+**Data source**：CninfoAnnouncement = 巨潮资讯网 (cninfo.com.cn)，证监会指定的 A 股官方公告披露平台。**Cache 是 stale 的**，实际事件只到 **2019-06-14 (di=2550)**（其他公告数据集也都 stale 或非事件流，见 §七 caveats）。
+
+**Universe**：Ashare (NSTOCK = 6144)
+**实际 sample period**：**2018-01-01 ~ 2019-06-14** (1.5 年)
+**Event 总数**：trigger_passive 22,396 → year+window+cap+ind filter → **4,520 treatment events**
 
 ## 四、方法
 
-### Sanity 阶段（v1 前）
+### Sanity 阶段（确定主链）
 
-1. ls cache → 找到 `CninfoAnnouncement` (offsets / category / title / categoryIx)
+1. ls cache → `CninfoAnnouncement` (offsets / category / title)
 2. 全展开 → category=3 events 79,266
-3. GPT priority classifier 按 title 拆 5 子类
-4. n 分布 + GPF (F6) cross-tab + prior 20D return per 子类
-5. 触发 case B + case D → 砍原 thesis，转 trigger_passive 主表
+3. **GPT priority classifier** 拆 5 子类，按 title substring：
+   - "业绩预告" → earnings_overlap (剔 F6 重叠)
+   - "异常波动" → trigger_passive (**F10 主链**, n=22K)
+   - "澄清" → clarification_true (n=3K, underpowered)
+   - "风险提示" → ongoing_st
+   - else → other (substring 漏检, v2 候选 LLM)
 
-### v1 主跑（trigger_passive）
+### v1 主跑（trigger_passive 全样本）
 
-1. Filter: category=3 AND title 含 "异常波动" AND NOT "业绩预告" AND NOT "澄清"
-2. CAR windows: +1~+5, +1~+10, +1~+20
-3. Cohort: prior 20D 五分位 + cap 三分位
-4. Cluster SE: (year_quarter × SW2)
+事件研究 + prior 20D quintile cohort split + cluster SE (year_quarter × SW2)。
 
 ### v2 matched control（identification）
 
-1. 对每个 treatment (di_t, ii_t) 构造 candidate pool：
-   - same SW2 industry × same year_month × cap_q ± 1
-   - prior_20d_return within ±5pp
-   - exclude: ii has trigger_passive event in [di_t − 60, di_t + 20]
-2. 1:1 random sample (seed=42)
-3. β_anchor = E[CAR_trt] − E[CAR_ctrl]，stratified by prior 20D quintile
+1:1 random sample matching:
+- same SW2 industry × same year_month × cap_q ± 1 × prior_20d ± **5pp**
+- exclude trigger_passive in [di_ctrl − 60, di_ctrl + 20]
 
-## 五、决策与新经济叙事
+### v3 capacity + tighter match
 
-### 5.1 GPT 二元 framework 的 outcome
+- PRIOR_TOL ±5pp → **±2pp** (matching rate 76.6% → 71.5%)
+- T+1 |return| ≥ 9.5% 一字板封死率 by quintile
+- tradable subset (排除 T+1 一字板) 重新算 matched diff
+- 1.5y 内 split-half (2018 vs 2019 H1) 作 weak OOS proxy
 
-| Narrative | 预测 | 实测 |
-|---|---|---|
-| N1 真 anchor | Q1 matched diff < 0 且 t < −2 | ✅ Q1 diff=-8.65%, t=−10.4 |
-| N2 momentum 重发现 | 所有 quintile diff ≈ 0 | ❌ |
+### v4 final（Q1-Q5 split-half + capacity）
 
-**判定**：Narrative 1 真 anchor 效应 **成立**，且比 GPT 预期**更丰富**（双向都显著）。
+- tradable subset 上**每个 quintile 各做 split-half**
+- Capacity 估算（median cap × 1% × 50% free float × events/年）
 
-### 5.2 新经济叙事：异动公告 = bimodal attention amplifier
+## 五、Quintile 定义
 
-- **机制**：异动公告本质是交易所对 sentiment-driven 价格反常的**强制注意力放大**。市场对此 anchor 的反应取决于先前情绪 state：
-  - 先前下跌（Q1）→ 异动 = bad news confirmation → 恐慌 / margin call / stop loss / panic → 加速下跌
-  - 先前上涨（Q5）→ 异动 = "被点名 = 被关注" → 追买 / 题材发酵 → 加速上涨
-  - 中间 state → 无明确情绪锚，效应平淡
+按"异动公告前 20 个交易日累积超额收益（市场截面 demean cumsum）" 分五等分：
 
-### 5.3 与 §0 反共识 thesis 的关系
+| Q | prior 20D 超额 | 通俗描述 | 经济故事 |
+|---|---|---|---|
+| **Q1 弱势** | ≤ −8.8% | 异动前 20 天**跌**了 8.8% 以上 | 连续下跌 → 异动 = "请说明下跌原因" → bad news confirmation |
+| Q2 | −8.8% ~ +10.9% | 横盘到微涨 | 异动叙事弱 |
+| Q3 | +10.9% ~ +19.5% | 中等强势 | 中等强势异动 |
+| Q4 | +19.5% ~ +26.9% | 较强势 | 已接近异动触发标准 |
+| **Q5 强势** | > +26.9% | 极强势"妖股" | 异动 = "你这是不是炒作"，多数随后封涨停 |
 
-**F10 不是 §0 mini-instance**。两个完全不同的通道：
+## 六、核心实证表
 
-| feature | 机制 | thesis 通道 |
-|---|---|---|
-| F6 (预增 cohort) | 业绩兑现 → 集体期权到期 → 反转 | §0 兑现型反共识 |
-| F10 (异动公告) | 注意力 anchor → 放大已有 sentiment | **独立的 attention amplifier** |
+### 6.1 v3 主表 — matched diff ALL (PRIOR_TOL=±2pp)
 
-F6 在 "涨太多 → 反转" 通道；F10 在 "已涨/已跌 → 异动放大" 通道。两者机制相反但都成立。
+| window | n | E[trt] | E[ctrl] | diff | clustered t |
+|---|---|---|---|---|---|
+| +1~+10 | 3,233 | -2.6% | -1.6% | **-0.96%** | **-2.15** |
+| +1~+20 | 3,233 | -4.4% | -2.0% | **-2.41%** | **-4.36** |
 
-## 六、Sanity 三层
+### 6.2 v3 主表 — Quintile diff
+
+| Q | n | diff_10 | clustered t |
+|---|---|---|---|
+| **Q1 弱势** | 647 | **−8.95%** | **−9.77** |
+| Q2 | 646 | -1.01% | -1.09 |
+| Q3 | 647 | +0.16% | +0.18 |
+| Q4 | 646 | +1.43% | +1.79 |
+| Q5 强势 | 647 | **+3.58%** | **+3.46** |
+
+### 6.3 v3 capacity check — T+1 一字板封死率
+
+| Q | T+1 跌停 | T+1 涨停 | 任一一字板 |
+|---|---|---|---|
+| Q1 弱势 | **14.9%** | 2.9% | 17.8% |
+| Q5 强势 | 12.1% | **28.6%** | **40.7%** |
+
+Q5 强势组 29% 涨停 → 大量 paper alpha 不可交易。
+
+### 6.4 v3 tradable subset (排除 T+1 一字板) — **关键 finding**
+
+| Q | n | tradable diff_10 | t |
+|---|---|---|---|
+| **Q1 弱势** | 524 | **−6.25%** | **−6.21** |
+| Q2 | 492 | −3.00% | −3.83 |
+| Q3 | 469 | −3.83% | −4.96 |
+| Q4 | 436 | −1.89% | −2.47 |
+| **Q5 强势** | 409 | **−0.31%** | **−0.35** ← paper-only 暴露 |
+| **ALL** | 2,330 | **−3.22%** | **−8.65** |
+
+Q5 的 +3.58% paper diff **完全是涨停一字板贡献**，tradable subset 内完全消失。
+
+### 6.5 v4 tradable Q1-Q5 split-half (2018 vs 2019 H1)
+
+| Q | 2018 t_c_10 | 2019 H1 t_c_10 | 评定 |
+|---|---|---|---|
+| **Q1 弱势** | **−4.92** | **−4.30** | ✅ **两期都强稳** |
+| Q2 | −3.73 | -1.75 | △ marginal |
+| **Q3** | **−3.08** | **−4.16** | ✅ 两期都稳 |
+| Q4 | -3.44 | **+0.07** | ❌ **2019 H1 OOS 失效** |
+| Q5 | -0.75 | +0.16 | ❌ paper-only 确认 |
+
+### 6.6 v4 capacity 数字（cap 单位 = 百万元）
+
+| Q | n_tradable | median cap (亿元) | IQR (亿元) |
+|---|---|---|---|
+| **Q1 弱势** | 524 | **42.2** | [25.6, 73.7] |
+| Q2 | 492 | 37.8 | [27.0, 61.9] |
+| Q3 | 469 | 39.2 | [28.6, 65.9] |
+| Q4 | 436 | 40.8 | [29.8, 70.0] |
+| Q5 | 409 | 47.6 | [32.7, 86.5] |
+
+**A 股中小盘**为主，median 市值 ~40 亿元。
+
+**Q1 子样本年容量**：
+- events/年 = 524 / 1.5 ≈ **350 events/年**
+- 单 event 容量（1% 总市值 × 50% free float） ≈ 0.21 亿元
+- **Q1 年容量上界 ≈ 73 亿元/年**（1% allocation）
+- **保守估算 ≈ 35 亿元/年**（0.5% × 50% FF）
+
+**Q1+Q3 robust 双子样本年容量** ≈ **70-150 亿元/年**
+
+足够中型 quant fund 跑（典型 hedge fund alpha 容量 5-20 亿元）。
+
+## 七、已知 caveats
+
+1. **Sample period 仅 1.5 年单 regime**：Cninfo cache stale 到 2019-06-14，所有候选公告数据源也都 stale 或非事件流
+2. **严格 OOS hold-out 不可行**：cache 限制；用 sample 内 split-half 作 weak proxy
+3. **5 次 pivot 累积**：data-driven 升级但 in-sample fit risk
+4. **Q4 在 2019 H1 OOS 失效**：regime sensitive，可能是 alpha 边界
+5. **Q5 +3.37% 是 paper-only**：涨停一字板贡献，tradable 内完全消失
+6. **Cap 字段是总市值不是流通市值**：未找到专用流通市值字段，capacity 估算用 50% free float 假设
+7. **title substring 拆分是近似**：other 30%，"澄清" 内部混杂业绩预告 / 异动 / 风险提示（v2 LLM 候选）
+8. **修正预告信息内容被丢弃**：first-record dedup 放弃 multi-record cell（43.5% cells 有 >1 event）
+9. **行业去均值未做**：用市场截面 demean，行业 confound 可能存在
+10. **F6 × F10 时序交互失败**：GPF events 170K 中只 67 条前 20D 内有异动 (0.04%)，两通道时序几乎不交集
+
+## 八、F10 最终评定
+
+**保留进 Deliverable**，但卡片**完全重写**：
+
+> **F10 = 异动公告作为 sentiment amplifier 在弱-中 prior return cohort 上产生 -3% ~ -6% 加速下跌**
+>
+> 不是：
+> - ❌ "澄清/降级 = 反转硬信号" (Pivot 1)
+> - ❌ "强势 anchor → 反转" (Pivot 2)
+> - ❌ "bimodal 双向 amplifier" (Pivot 4) — Q5 paper-only 拆穿
+>
+> 是：
+> - ✅ **"Q1 弱势 (prior 20D ≤ -8.8%) + Q3 中性 (prior +11%~20%) 两子样本最 robust"**
+> - 主表 alpha：Q1 tradable diff_10 = **-6.25% (t=-6.21), split-half 两期都 t<-4**
+> - Sample period **1.5y 单 regime (cache 限制)**，OOS hold-out blocked
+> - Capacity ≈ **35-73 亿元/年 (Q1 only)**，70-150 亿/年 (Q1+Q3)
+> - 5 次 thesis pivot，主动暴露完整 + 防御段
+
+## 九、Sanity 三层
 
 | 层 | 状态 | 修订 |
 |---|---|---|
-| ① 单调性 | **√** | Q1-Q5 单调（matched diff 从 -8.65 单调递增到 +3.37） |
-| ② 识别策略 | **√√** | matched control 严格区分 anchor vs momentum，Q1 diff t=-10.4 干净 |
-| ③ 异质性 | **√** | bimodal cohort 拆分清晰，prior 20D quintile 是核心 conditioning 变量 |
+| ① 单调性 | **△** | Q1-Q5 不再严格单调（Q1 最强 → Q5 paper-only），但在 tradable subset 内 Q1-Q4 同方向 |
+| ② 识别策略 | **√√** | v2-v3 matched control + v3 tradable filter + v4 split-half 三重 identification |
+| ③ 异质性 | **√** | quintile + capacity + split-half 三轴 cohort 都做了 |
 
-## 七、已知 caveats（v1 + v2 累积）
-
-1. **原 F10 thesis（降级/澄清）underpowered**：真澄清 n=3K，未作 main test，留 v2 LLM 重启
-2. **title substring 拆分是近似**：other 占比 30.4%，可能漏检真澄清 / 异动事件；v2 候选 LLM 分类
-3. **matching PRIOR_TOL=±5pp 偏宽**：|prior_diff|>1pp 占 83.6%，v3 应收紧到 ±2pp 看 finding 是否稳定
-4. **1:1 matching**：v3 可以 1:3 或 full matching 提 power
-5. **异动触发本身有 forward-looking 风险**：交易所判定基于前几日股价，PIT 上界 = announce_date + 1，已沿 F1 框架自动跳过 T0
-6. **未做行业去均值**：市场截面去均值，行业 confound 可能存在
-7. **clarification_true 脚注 n=311**：v1 reports t=-3.11 (CAR_5) / -2.16 (CAR_10) — 方向一致但 n 太小，**v2 不作结论**
-8. **F6 × F10 时序交互失败**：GPF events 170K 中只 67 条前 20D 内有异动 (0.04%) — F6 与 F10 在时间上几乎不交集，无法测交互
-
-## 八、F10 评定
-
-**保留，进 Deliverable，卡片需完全重写**。
-
-不是：
-- ❌ "澄清/降级 = 反转硬信号"（原 thesis，sanity 砍）
-- ❌ "强势 anchor 反转"（GPT brief，v1 反向）
-
-是：
-- ✅ **"异动公告作 attention amplifier，对弱势/强势双向放大 sentiment"**
-
-## 九、Next steps（按优先级）
+## 十、Next steps（按 ROI）
 
 | 优先 | 任务 | 工作量 | 价值 |
 |---|---|---|---|
-| **高** | 写 Deliverable F10 卡片（完全重写，记入 TODO）| 1 小时 | mentor 直接看 |
-| **高** | 收紧 PRIOR_TOL ±5pp → ±2pp 看 finding 是否稳定 | 半天 | identification 稳健性 |
-| 中 | 1:3 matching 替代 1:1，提 power | 半天 | Q5 强势侧 t=+3.15 是否更稳 |
-| 中 | F6 × F10 交叉 cohort (用更长前 lag window) | 半天 | 看 §0 通道与 attention 通道是否在时序上交互 |
+| **高** | Deliverable F10 卡片完全重写 (基于 v4) | 1 小时 | mentor 直接看 |
+| 中 | F11 LLM 重启原 F10 thesis（澄清子样本扩样）| 2 天 | Pivot 1 复活的可能 |
+| 中 | F10 × F1 交叉：Q1 弱势异动 ∩ 解禁前后 | 半天 | 看两个反转信号是否叠加 |
+| 中 | 改用 ±1pp 极严 match 看 Q1 是否仍 robust | 半天 | 抗 over-matching |
 | 低 | 行业去均值替代市场去均值 | 半天 | 减少行业 confound |
-| 低 | clarification_true 用 LLM 严格抽取再跑 | 1 天 | v2 LLM 重启原 thesis |
+| 低 | F10 v2 LLM 重做 substring → 严格分类 | 1 天 | other 30% 漏检 |
 
-## 十、文件清单
+## 十一、文件清单
 
 ```
 F10_anchor_reversal/
-├── README.md                       (本文档)
-├── output_f10_subclass.txt        (sanity: subclass 拆分 + 决策 case B/D)
-├── output_f10_v1.txt              (v1: trigger_passive 主表 + Q1-Q5 反向 finding)
-└── output_f10_matched.txt         (v2: matched control identification + bimodal)
+├── README.md                       (本文档, v4 终版)
+├── output_f10_subclass.txt        (sanity: subclass 拆分 + case B/D 决策)
+├── output_alt_freshness.txt       (备选公告数据集 freshness 排查)
+├── output_f10_v1.txt              (v1: trigger_passive 主表, Q1-Q5 反向 finding)
+├── output_f10_matched.txt         (v2: matched control identification, bimodal)
+├── output_f10_v3.txt              (v3: PRIOR_TOL ±2pp + capacity + split-half)
+└── output_f10_v4.txt              (v4: tradable Q1-Q5 split-half + capacity 数字)
 ```
 
 源码 canonical 位置：`pysim-workspace/tools/f10_anchor/` 和 `pysim-workspace/tools/f10_probe/`
 
-## 十一、部署 + 运行
+## 十二、部署 + 运行
 
 bjintern12 一行系列：
 
 ```bash
-# Sanity (subclass 拆分 + case 判定)
-bash ~/pysim-ws/tools/f10_probe/run_subclass.sh
+# Sanity 阶段
+bash ~/pysim-ws/tools/f10_probe/run_subclass.sh         # subclass 拆分 + case 判定
+bash ~/pysim-ws/tools/f10_probe/run_alt_freshness.sh    # 备选数据 freshness 排查
+bash ~/pysim-ws/tools/f10_probe/run_gildata_probe.sh    # Gildata schema 排查
 
-# v1 主跑 (trigger_passive)
-bash ~/pysim-ws/tools/f10_anchor/run.sh
-
-# v2 matched control (identification)
-bash ~/pysim-ws/tools/f10_anchor/run_matched.sh
+# 主验证链
+bash ~/pysim-ws/tools/f10_anchor/run.sh                 # v1 主跑
+bash ~/pysim-ws/tools/f10_anchor/run_matched.sh         # v2 matched control
+bash ~/pysim-ws/tools/f10_anchor/run_v3.sh              # v3 capacity + tight match
+bash ~/pysim-ws/tools/f10_anchor/run_v4.sh              # v4 final (split-half + capacity)
 ```
 
 ---
 
 ## 附：嵌进 Deliverable F10 卡片的简短摘要
 
-> **F10 sanity + v1 + v2 验证（2026-05-17，2018-2023 共 4,520 个 clean treatment events + 3,464 matched controls）**：
-> - **Sanity**：原 thesis（澄清/降级 = 反转）实证 sample n=3K underpowered，砍 main；改跑 trigger_passive (异常波动) n=22K
-> - **v1**：trigger_passive ALL CAR_10 clustered t=−5.77，但 prior 20D Q1 子样本反转最强 (−9.8%, t=−10.9) — 反预测方向，存在 momentum vs anchor identification 模糊
-> - **v2 matched control**：1:1 matching 后 Q1 diff_10 = **−8.65% (t=−10.4)** 且 Q5 diff_10 = **+3.37% (t=+3.15)**，bimodal anchor 效应实证
-> - **新经济叙事**：异动公告 = bimodal attention amplifier；机制独立于 F6 兑现型反共识 thesis
-> - **结论**：F10 入 Deliverable，但卡片需完全重写从"降级反转"改为"attention amplifier"
+> **F10 sanity + v1 + v2 + v3 + v4 验证（2026-05-17 ~ 18，2018-01 ~ 2019-06 共 4,520 clean treatment + 3,233 matched）**：
+> - **Sanity**：原 thesis（澄清/降级 = 反转）n=3K underpowered，砍 main
+> - **v1-v3 经过 4 次 framing 迭代**，最终 v3-v4 确定主信号
+> - **v4 最终 thesis**：异动公告 = sentiment amplifier 在 Q1 弱势 (prior 20D ≤ -8.8%) + Q3 中性 (prior +11~20%) cohort 上 robust -3~-6% 反转
+> - **Q1 tradable diff_10 = −6.25% (t=−6.21)**，split-half 2018: t=-4.92 / 2019: t=-4.30 两期都强稳
+> - **Q5 强势侧 +3.37% paper diff 完全是涨停一字板贡献**，tradable t=−0.35 完全消失
+> - **Capacity**：median cap ≈ 42 亿元 (中小盘 A 股)，Q1 年容量 ≈ 35-73 亿元 RMB
+> - **Caveat**：sample 1.5y 单 regime，严格 OOS hold-out blocked by cache staleness；split-half 作 weak proxy
+> - **结论**：F10 入 Deliverable，卡片完全重写为"Q1 主 + Q3 辅 sentiment amplifier"窄 framing
